@@ -20,11 +20,13 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
 
+import mekanism.generators.common.content.fusion.FusionReactorMultiblockData;
+
 public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachine {
 
-    IGasTank deuteriumTank;
-    IGasTank tritiumTank;
-    IGasTank fuelTank;
+    public static final String HEAT_TAB = FusionReactorMultiblockData.HEAT_TAB;
+    public static final String FUEL_TAB =  FusionReactorMultiblockData.FUEL_TAB;
+    public static final String STATS_TAB = FusionReactorMultiblockData.STATS_TAB;
 
     @ContainerSync
     private boolean burning = false;
@@ -41,6 +43,11 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
 
     @ContainerSync
     public double lastEnvironmentLoss;
+
+    @ContainerSync(tags = {FUEL_TAB, HEAT_TAB, STATS_TAB}, getter = "getInjectionRate", setter = "setInjectionRate")
+    private int injectionRate = 2;
+    @ContainerSync(tags = {FUEL_TAB, HEAT_TAB, STATS_TAB})
+    private long lastBurned;
 
     public TileEntityCompactFusionReactor(BlockPos pos, BlockState state) {
         super(CompactPlusBlocks.COMPACT_FUSION_REACTOR, pos, state);
