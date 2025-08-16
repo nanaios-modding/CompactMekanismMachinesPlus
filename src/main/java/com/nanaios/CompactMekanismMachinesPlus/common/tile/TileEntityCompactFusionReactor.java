@@ -4,6 +4,7 @@ import com.nanaios.CompactMekanismMachinesPlus.common.registries.CompactPlusBloc
 import mekanism.api.Action;
 import mekanism.api.AutomationType;
 import mekanism.api.IContentsListener;
+import mekanism.api.RelativeSide;
 import mekanism.api.chemical.ChemicalTankBuilder;
 import mekanism.api.chemical.gas.Gas;
 import mekanism.api.chemical.gas.GasStack;
@@ -19,7 +20,6 @@ import mekanism.common.capabilities.Capabilities;
 import mekanism.common.capabilities.energy.MachineEnergyContainer;
 import mekanism.common.capabilities.fluid.VariableCapacityFluidTank;
 import mekanism.common.capabilities.heat.CachedAmbientTemperature;
-import mekanism.common.capabilities.heat.ITileHeatHandler;
 import mekanism.common.capabilities.heat.VariableHeatCapacitor;
 import mekanism.common.capabilities.holder.chemical.ChemicalTankHelper;
 import mekanism.common.capabilities.holder.chemical.IChemicalTankHolder;
@@ -37,6 +37,9 @@ import mekanism.common.registries.MekanismGases;
 import mekanism.common.tags.MekanismTags;
 import mekanism.common.tile.component.TileComponentConfig;
 import mekanism.common.tile.component.TileComponentEjector;
+import mekanism.common.tile.component.config.ConfigInfo;
+import mekanism.common.tile.component.config.DataType;
+import mekanism.common.tile.component.config.slot.ChemicalSlotInfo;
 import mekanism.common.tile.prefab.TileEntityConfigurableMachine;
 import mekanism.common.util.HeatUtils;
 import mekanism.common.util.MekanismUtils;
@@ -126,13 +129,20 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
 
     public TileEntityCompactFusionReactor(BlockPos pos, BlockState state) {
         super(CompactPlusBlocks.COMPACT_FUSION_REACTOR, pos, state);
-
         configComponent = new TileComponentConfig(this, TransmissionType.GAS,TransmissionType.FLUID,TransmissionType.ENERGY);
 
         biomeAmbientTemp = HeatAPI.getAmbientTemp(this.getLevel(),pos);
         lastPlasmaTemperature = biomeAmbientTemp;
         lastCaseTemperature = biomeAmbientTemp;
         plasmaTemperature = biomeAmbientTemp;
+
+        ConfigInfo gasConfig = configComponent.getConfig(TransmissionType.GAS);
+        if (gasConfig !=null){
+            gasConfig.addSlotInfo( DataType.INPUT_1, new ChemicalSlotInfo.GasSlotInfo(true,false, deuteriumTank));
+            gasConfig.setDataType(DataType.INPUT_1, RelativeSide.LEFT);
+        }
+
+
 
         ejectorComponent = new TileComponentEjector(this, ()->Long.MAX_VALUE,()->Integer.MAX_VALUE,()-> FloatingLong.create(Long.MAX_VALUE));
         ejectorComponent.setOutputData(configComponent, TransmissionType.GAS,TransmissionType.FLUID,TransmissionType.ENERGY)

@@ -1,4 +1,5 @@
 {
   "other.compactmekanismmachinesplus.mod_name": "CompactMekanismMachinesPlus",
-  "other.compactmekanismmachinesplus.compact_fusion_reactor": "1マス核融合炉"
+  "block.compactmekanismmachinesplus.compact_fusion_reactor": "1マス核融合炉",
+  "side_data.compactmekanismmachinesplus.input_3": "搬入(3)"
 }
