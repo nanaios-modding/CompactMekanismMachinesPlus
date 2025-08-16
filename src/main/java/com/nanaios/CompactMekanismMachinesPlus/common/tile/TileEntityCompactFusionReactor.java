@@ -13,25 +13,28 @@ import mekanism.api.heat.HeatAPI;
 import mekanism.api.heat.IHeatCapacitor;
 import mekanism.api.math.FloatingLong;
 import mekanism.api.math.MathUtils;
-import mekanism.common.capabilities.chemical.multiblock.MultiblockChemicalTankBuilder;
 import mekanism.common.capabilities.energy.MachineEnergyContainer;
-import mekanism.common.capabilities.energy.VariableCapacityEnergyContainer;
 import mekanism.common.capabilities.fluid.VariableCapacityFluidTank;
+import mekanism.common.capabilities.heat.CachedAmbientTemperature;
 import mekanism.common.capabilities.heat.VariableHeatCapacitor;
 import mekanism.common.capabilities.holder.chemical.ChemicalTankHelper;
 import mekanism.common.capabilities.holder.chemical.IChemicalTankHolder;
 import mekanism.common.capabilities.holder.energy.EnergyContainerHelper;
 import mekanism.common.capabilities.holder.energy.IEnergyContainerHolder;
+import mekanism.common.capabilities.holder.fluid.FluidTankHelper;
+import mekanism.common.capabilities.holder.fluid.IFluidTankHolder;
+import mekanism.common.capabilities.holder.heat.HeatCapacitorHelper;
+import mekanism.common.capabilities.holder.heat.IHeatCapacitorHolder;
+import mekanism.common.capabilities.holder.slot.IInventorySlotHolder;
+import mekanism.common.capabilities.holder.slot.InventorySlotHelper;
 import mekanism.common.inventory.container.sync.dynamic.ContainerSync;
 import mekanism.common.lib.transmitter.TransmissionType;
-import mekanism.common.registries.MekanismGases;
 import mekanism.common.tags.MekanismTags;
 import mekanism.common.tile.component.TileComponentConfig;
 import mekanism.common.tile.component.TileComponentEjector;
 import mekanism.common.tile.prefab.TileEntityConfigurableMachine;
 import mekanism.common.util.HeatUtils;
 import mekanism.common.util.MekanismUtils;
-import mekanism.generators.common.GeneratorTags;
 import mekanism.generators.common.config.MekanismGeneratorsConfig;
 import mekanism.generators.common.item.ItemHohlraum;
 import mekanism.generators.common.registries.GeneratorsGases;
@@ -43,11 +46,24 @@ import org.jetbrains.annotations.NotNull;
 import mekanism.generators.common.content.fusion.FusionReactorMultiblockData;
 import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.Nonnull;
+
 public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachine {
 
     public static final String HEAT_TAB = FusionReactorMultiblockData.HEAT_TAB;
     public static final String FUEL_TAB =  FusionReactorMultiblockData.FUEL_TAB;
     public static final String STATS_TAB = FusionReactorMultiblockData.STATS_TAB;
+
+    public static final int MAX_INJECTION = 98;//this is the effective cap in the GUI, as text field is limited to 2 chars
+    //Reaction characteristics
+    private static final double burnTemperature = 100_000_000;
+    private static final double burnRatio = 1;
+    //Thermal characteristics
+    private static final double plasmaHeatCapacity = 100;
+    private static final double caseHeatCapacity = 1;
+    private static final double inverseInsulation = 100_000;
+    //Heat transfer metrics
+    private static final double plasmaCaseConductivity = 0.2;
 
     @ContainerSync(tags = HEAT_TAB)
     public IExtendedFluidTank waterTank;
@@ -93,7 +109,7 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
     @ContainerSync(tags = {FUEL_TAB, HEAT_TAB, STATS_TAB})
     private long lastBurned;
 
-    final ReactorInventorySlot reactorSlot;
+    private ReactorInventorySlot reactorSlot;
 
     public double plasmaTemperature;
 
@@ -106,18 +122,12 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
         lastCaseTemperature = biomeAmbientTemp;
         plasmaTemperature = biomeAmbientTemp;
 
-        gasTanks.add(fuelTank = MultiblockChemicalTankBuilder.GAS.input(this, MekanismGeneratorsConfig.generators.fusionFuelCapacity,
-                GeneratorTags.Gases.FUSION_FUEL_LOOKUP::contains, createSaveAndComparator()));
-        gasTanks.add(steamTank = MultiblockChemicalTankBuilder.GAS.output(this, this::getMaxSteam, gas -> gas == MekanismGases.STEAM.getChemical(), this));
-        fluidTanks.add(waterTank = VariableCapacityFluidTank.input(this, this::getMaxWater, fluid -> MekanismTags.Fluids.WATER_LOOKUP.contains(fluid.getFluid()), this));
-        heatCapacitors.add(heatCapacitor = VariableHeatCapacitor.create(caseHeatCapacity, FusionReactorMultiblockData::getInverseConductionCoefficient,
-                () -> inverseInsulation, () -> biomeAmbientTemp, this));
-        inventorySlots.add(reactorSlot = ReactorInventorySlot.at(stack -> stack.getItem() instanceof ItemHohlraum, this, 80, 39));
-
         ejectorComponent = new TileComponentEjector(this, ()->Long.MAX_VALUE,()->Integer.MAX_VALUE,()-> FloatingLong.create(Long.MAX_VALUE));
         ejectorComponent.setOutputData(configComponent, TransmissionType.GAS,TransmissionType.FLUID,TransmissionType.ENERGY)
                 .setCanEject(type -> MekanismUtils.canFunction(this));
     }
+
+    //以下融合炉メソッド
 
     public FloatingLong getPassiveGeneration(boolean active, boolean current) {
         double temperature = current ? getLastCaseTemp() : getMaxCasingTemperature(active);
@@ -201,11 +211,33 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
 
     public boolean isBurning() {return burning;}
 
+    private static double getInverseConductionCoefficient() {
+        return 1 / MekanismGeneratorsConfig.generators.fusionCasingThermalConductivity.get();
+    }
+
+    //以下初期化系メソッド
+
     @Override
     public @Nullable IChemicalTankHolder<Gas, GasStack, IGasTank> getInitialGasTanks(IContentsListener listener) {
         ChemicalTankHelper<Gas, GasStack, IGasTank> builder = ChemicalTankHelper.forSideGasWithConfig(this::getDirection,this::getConfig);
         builder.addTank(deuteriumTank = ChemicalTankBuilder.GAS.input(MekanismGeneratorsConfig.generators.fusionFuelCapacity.get(), gas -> gas == GeneratorsGases.DEUTERIUM.getChemical(),listener));
         builder.addTank(tritiumTank = ChemicalTankBuilder.GAS.input(MekanismGeneratorsConfig.generators.fusionFuelCapacity.get(), gas -> gas == GeneratorsGases.TRITIUM.getChemical(),listener));
+        builder.addTank(fuelTank = ChemicalTankBuilder.GAS.input(MekanismGeneratorsConfig.generators.fusionFuelCapacity.get(), gas -> gas == GeneratorsGases.FUSION_FUEL.getChemical(),createSaveAndComparator()));
+        builder.addTank(steamTank = ChemicalTankBuilder.GAS.output(maxSteam,listener));
+        return builder.build();
+    }
+
+    @NotNull
+    @Override
+    public IFluidTankHolder getInitialFluidTanks(IContentsListener listener){
+        FluidTankHelper builder = FluidTankHelper.forSideWithConfig(this::getDirection,this::getConfig);
+        builder.addTank(waterTank = VariableCapacityFluidTank.input( this::getMaxWater, fluid -> MekanismTags.Fluids.WATER_LOOKUP.contains(fluid.getFluid()), this));
+        return builder.build();
+    }
+
+    public IHeatCapacitorHolder getInitialHeatCapacitors(IContentsListener listener, CachedAmbientTemperature ambientTemperature){
+        HeatCapacitorHelper builder = HeatCapacitorHelper.forSide(this::getDirection);
+        builder.addCapacitor(heatCapacitor = VariableHeatCapacitor.create(caseHeatCapacity, TileEntityCompactFusionReactor::getInverseConductionCoefficient, () -> inverseInsulation, () -> biomeAmbientTemp, listener));
         return builder.build();
     }
 
@@ -215,6 +247,30 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
         EnergyContainerHelper builder = EnergyContainerHelper.forSide(this::getDirection);
         builder.addContainer(energyContainer = MachineEnergyContainer.output(MekanismGeneratorsConfig.generators.fusionEnergyCapacity.get(),listener));
         return builder.build();
+    }
+
+    @Nonnull
+    @Override
+    protected IInventorySlotHolder getInitialInventory(IContentsListener listener) {
+        InventorySlotHelper builder = InventorySlotHelper.forSide(this::getDirection);
+        builder.addSlot(reactorSlot = ReactorInventorySlot.at(stack -> stack.getItem() instanceof ItemHohlraum, listener, 80, 39));
+        return builder.build();
+    }
+
+    //その他
+
+    protected IContentsListener createSaveAndComparator() {
+        return this.createSaveAndComparator(this);
+    }
+
+    protected IContentsListener createSaveAndComparator(IContentsListener contentsListener) {
+        return () -> {
+            contentsListener.onContentsChanged();
+            if (!this.isRemote()) {
+                this.markDirtyComparator();
+            }
+
+        };
     }
 
     public  IEnergyContainer getEnergyContainer() {
