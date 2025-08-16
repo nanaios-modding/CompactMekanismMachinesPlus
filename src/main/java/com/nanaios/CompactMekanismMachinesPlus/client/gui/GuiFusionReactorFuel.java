@@ -2,6 +2,9 @@ package com.nanaios.CompactMekanismMachinesPlus.client.gui;
 
 import com.nanaios.CompactMekanismMachinesPlus.client.gui.element.GuiFusionReactorTab;
 import com.nanaios.CompactMekanismMachinesPlus.client.gui.element.GuiFusionReactorTab.FusionReactorTab;
+import com.nanaios.CompactMekanismMachinesPlus.common.network.to_server.PacketCompactPlusGuiInteract.CompactPlusGuiInteraction;
+import com.nanaios.CompactMekanismMachinesPlus.common.network.to_server.PacketCompactPlusGuiInteract;
+import com.nanaios.CompactMekanismMachinesPlus.common.CompactMekanismMachinesPlus;
 import com.nanaios.CompactMekanismMachinesPlus.common.tile.TileEntityCompactFusionReactor;
 import mekanism.client.gui.element.gauge.GaugeType;
 import mekanism.client.gui.element.gauge.GuiGasGauge;
@@ -11,10 +14,6 @@ import mekanism.client.gui.element.text.GuiTextField;
 import mekanism.common.inventory.container.tile.EmptyTileContainer;
 import mekanism.common.util.text.InputValidator;
 import mekanism.generators.common.GeneratorsLang;
-import mekanism.generators.common.MekanismGenerators;
-import mekanism.generators.common.network.to_server.PacketGeneratorsGuiInteract;
-import mekanism.generators.common.network.to_server.PacketGeneratorsGuiInteract.GeneratorsGuiInteraction;
-import mekanism.generators.common.tile.fusion.TileEntityFusionReactorController;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
@@ -55,7 +54,7 @@ public class GuiFusionReactorFuel extends GuiFusionReactorInfo {
 
     private void setInjection() {
         if (!injectionRateField.getText().isEmpty()) {
-            MekanismGenerators.packetHandler().sendToServer(new PacketGeneratorsGuiInteract(GeneratorsGuiInteraction.INJECTION_RATE, tile, Integer.parseInt(injectionRateField.getText())));
+            CompactMekanismMachinesPlus.packetHandler().sendToServer(new PacketCompactPlusGuiInteract(CompactPlusGuiInteraction.INJECTION_RATE, tile, Integer.parseInt(injectionRateField.getText())));
             injectionRateField.setText("");
         }
     }

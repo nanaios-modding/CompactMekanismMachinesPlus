@@ -1,7 +1,8 @@
 package com.nanaios.CompactMekanismMachinesPlus.client.gui.element;
 
-import com.nanaios.CompactMekanismMachinesPlus.common.network.to_server.PacketCompactGuiButtonPress;
-import com.nanaios.CompactMekanismMachinesPlus.common.network.to_server.PacketCompactGuiButtonPress.ClickedCompactTileButton;
+import com.nanaios.CompactMekanismMachinesPlus.common.CompactMekanismMachinesPlus;
+import com.nanaios.CompactMekanismMachinesPlus.common.network.to_server.PacketCompactPlusGuiButtonPress;
+import com.nanaios.CompactMekanismMachinesPlus.common.network.to_server.PacketCompactPlusGuiButtonPress.ClickedCompactPlusTileButton;
 import com.nanaios.CompactMekanismMachinesPlus.common.tile.TileEntityCompactFusionReactor;
 import mekanism.api.text.ILangEntry;
 import mekanism.client.SpecialColors;
@@ -25,17 +26,17 @@ public class GuiFusionReactorTab extends GuiTabElementType<TileEntityCompactFusi
     }
 
     public enum FusionReactorTab implements TabType<TileEntityCompactFusionReactor> {
-        HEAT(MekanismUtils.getResource(ResourceType.GUI, "heat.png"), GeneratorsLang.HEAT_TAB, 6, ClickedCompactTileButton.TAB_HEAT, GeneratorsSpecialColors.TAB_MULTIBLOCK_HEAT),
-        FUEL(MekanismGenerators.rl(ResourceType.GUI.getPrefix() + "fuel.png"), GeneratorsLang.FUEL_TAB, 34, ClickedCompactTileButton.TAB_FUEL, GeneratorsSpecialColors.TAB_MULTIBLOCK_FUEL),
-        STAT(MekanismUtils.getResource(ResourceType.GUI, "stats.png"), GeneratorsLang.STATS_TAB, 62, ClickedCompactTileButton.TAB_STATS, SpecialColors.TAB_MULTIBLOCK_STATS);
+        HEAT(MekanismUtils.getResource(ResourceType.GUI, "heat.png"), GeneratorsLang.HEAT_TAB, 6, ClickedCompactPlusTileButton.TAB_HEAT, GeneratorsSpecialColors.TAB_MULTIBLOCK_HEAT),
+        FUEL(MekanismGenerators.rl(ResourceType.GUI.getPrefix() + "fuel.png"), GeneratorsLang.FUEL_TAB, 34, ClickedCompactPlusTileButton.TAB_FUEL, GeneratorsSpecialColors.TAB_MULTIBLOCK_FUEL),
+        STAT(MekanismUtils.getResource(ResourceType.GUI, "stats.png"), GeneratorsLang.STATS_TAB, 62, ClickedCompactPlusTileButton.TAB_STATS, SpecialColors.TAB_MULTIBLOCK_STATS);
 
-        private final ClickedCompactTileButton button;
+        private final ClickedCompactPlusTileButton button;
         private final ColorRegistryObject colorRO;
         private final ILangEntry description;
         private final ResourceLocation path;
         private final int yPos;
 
-        FusionReactorTab(ResourceLocation path, ILangEntry description, int y, ClickedCompactTileButton button, ColorRegistryObject colorRO) {
+        FusionReactorTab(ResourceLocation path, ILangEntry description, int y, ClickedCompactPlusTileButton button, ColorRegistryObject colorRO) {
             this.path = path;
             this.description = description;
             this.yPos = y;
@@ -49,7 +50,7 @@ public class GuiFusionReactorTab extends GuiTabElementType<TileEntityCompactFusi
         }
 
         public void onClick(TileEntityCompactFusionReactor tile) {
-            MekanismGenerators.packetHandler().sendToServer(new PacketCompactGuiButtonPress(button, tile.getBlockPos()));
+            CompactMekanismMachinesPlus.packetHandler().sendToServer(new PacketCompactPlusGuiButtonPress(button, tile.getBlockPos()));
         }
 
         @Override

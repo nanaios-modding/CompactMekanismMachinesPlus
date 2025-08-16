@@ -40,6 +40,7 @@ import mekanism.generators.common.item.ItemHohlraum;
 import mekanism.generators.common.registries.GeneratorsGases;
 import mekanism.generators.common.slot.ReactorInventorySlot;
 import net.minecraft.core.BlockPos;
+import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
 
@@ -213,6 +214,11 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
 
     private static double getInverseConductionCoefficient() {
         return 1 / MekanismGeneratorsConfig.generators.fusionCasingThermalConductivity.get();
+    }
+
+    public void setInjectionRateFromPacket(int rate) {
+        this.setInjectionRate(Mth.clamp(rate - (rate % 2), 0, FusionReactorMultiblockData.MAX_INJECTION));
+        markForSave();
     }
 
     //以下初期化系メソッド

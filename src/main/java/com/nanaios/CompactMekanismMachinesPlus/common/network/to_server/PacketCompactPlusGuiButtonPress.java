@@ -14,17 +14,17 @@ import net.minecraftforge.network.NetworkHooks;
 
 import java.util.function.BiFunction;
 
-public class PacketCompactGuiButtonPress implements IMekanismPacket {
+public class PacketCompactPlusGuiButtonPress implements IMekanismPacket {
 
-    private final ClickedCompactTileButton tileButton;
+    private final ClickedCompactPlusTileButton tileButton;
     private final int extra;
     private final BlockPos tilePosition;
 
-    public PacketCompactGuiButtonPress(ClickedCompactTileButton buttonClicked, BlockPos tilePosition) {
+    public PacketCompactPlusGuiButtonPress(ClickedCompactPlusTileButton buttonClicked, BlockPos tilePosition) {
         this(buttonClicked, tilePosition, 0);
     }
 
-    public PacketCompactGuiButtonPress(ClickedCompactTileButton buttonClicked, BlockPos tilePosition, int extra) {
+    public PacketCompactPlusGuiButtonPress(ClickedCompactPlusTileButton buttonClicked, BlockPos tilePosition, int extra) {
         this.tileButton = buttonClicked;
         this.tilePosition = tilePosition;
         this.extra = extra;
@@ -55,18 +55,18 @@ public class PacketCompactGuiButtonPress implements IMekanismPacket {
         buffer.writeVarInt(extra);
     }
 
-    public static PacketCompactGuiButtonPress decode(FriendlyByteBuf buffer) {
-        return new PacketCompactGuiButtonPress(buffer.readEnum(ClickedCompactTileButton.class), buffer.readBlockPos(), buffer.readVarInt());
+    public static PacketCompactPlusGuiButtonPress decode(FriendlyByteBuf buffer) {
+        return new PacketCompactPlusGuiButtonPress(buffer.readEnum(ClickedCompactPlusTileButton.class), buffer.readBlockPos(), buffer.readVarInt());
     }
 
-    public enum ClickedCompactTileButton {
+    public enum ClickedCompactPlusTileButton {
         TAB_HEAT((tile, extra) -> CompactPlusContainerTypes.COMPACT_FUSION_REACTOR_HEAT.getProvider(GeneratorsLang.FUSION_REACTOR, tile)),
         TAB_FUEL((tile, extra) -> CompactPlusContainerTypes.COMPACT_FUSION_REACTOR_FUEL.getProvider(GeneratorsLang.FUSION_REACTOR, tile)),
         TAB_STATS((tile, extra) -> CompactPlusContainerTypes.COMPACT_FUSION_REACTOR_STATS.getProvider(GeneratorsLang.FUSION_REACTOR, tile));
 
         private final BiFunction<TileEntityMekanism, Integer, MenuProvider> providerFromTile;
 
-        ClickedCompactTileButton(BiFunction<TileEntityMekanism, Integer, MenuProvider> providerFromTile) {
+        ClickedCompactPlusTileButton(BiFunction<TileEntityMekanism, Integer, MenuProvider> providerFromTile) {
             this.providerFromTile = providerFromTile;
         }
 
