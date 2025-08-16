@@ -6,7 +6,6 @@ import com.nanaios.CompactMekanismMachinesPlus.client.gui.element.GuiFusionReact
 import com.nanaios.CompactMekanismMachinesPlus.client.gui.element.GuiFusionReactorTab.FusionReactorTab;
 import com.nanaios.CompactMekanismMachinesPlus.common.tile.TileEntityCompactFusionReactor;
 import mekanism.client.gui.GuiConfigurableTile;
-import mekanism.client.gui.GuiMekanismTile;
 import mekanism.client.gui.element.tab.GuiEnergyTab;
 import mekanism.client.gui.element.tab.GuiHeatTab;
 import mekanism.common.MekanismLang;

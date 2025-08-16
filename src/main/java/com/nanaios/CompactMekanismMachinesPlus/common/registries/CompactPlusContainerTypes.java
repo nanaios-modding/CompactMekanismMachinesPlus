@@ -19,8 +19,8 @@ public class CompactPlusContainerTypes {
 
     static {
         COMPACT_FUSION_REACTOR = CONTAINER_TYPES.custom(CompactPlusBlocks.COMPACT_FUSION_REACTOR, TileEntityCompactFusionReactor.class).offset(5, 0).build();
-        COMPACT_FUSION_REACTOR_FUEL = CONTAINER_TYPES.registerEmpty("fusion_reactor_fuel", TileEntityCompactFusionReactor.class);
-        COMPACT_FUSION_REACTOR_HEAT = CONTAINER_TYPES.registerEmpty("fusion_reactor_heat", TileEntityCompactFusionReactor.class);
-        COMPACT_FUSION_REACTOR_STATS = CONTAINER_TYPES.registerEmpty("fusion_reactor_stats", TileEntityCompactFusionReactor.class);
+        COMPACT_FUSION_REACTOR_FUEL = CONTAINER_TYPES.registerEmpty("compact_fusion_reactor_fuel", TileEntityCompactFusionReactor.class);
+        COMPACT_FUSION_REACTOR_HEAT = CONTAINER_TYPES.registerEmpty("compact_fusion_reactor_heat", TileEntityCompactFusionReactor.class);
+        COMPACT_FUSION_REACTOR_STATS = CONTAINER_TYPES.registerEmpty("compact_fusion_reactor_stats", TileEntityCompactFusionReactor.class);
     }
 }

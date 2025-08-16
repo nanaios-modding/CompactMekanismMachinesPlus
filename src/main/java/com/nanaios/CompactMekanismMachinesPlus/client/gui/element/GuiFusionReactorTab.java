@@ -1,5 +1,7 @@
 package com.nanaios.CompactMekanismMachinesPlus.client.gui.element;
 
+import com.nanaios.CompactMekanismMachinesPlus.common.network.to_server.PacketCompactGuiButtonPress;
+import com.nanaios.CompactMekanismMachinesPlus.common.network.to_server.PacketCompactGuiButtonPress.ClickedCompactTileButton;
 import com.nanaios.CompactMekanismMachinesPlus.common.tile.TileEntityCompactFusionReactor;
 import mekanism.api.text.ILangEntry;
 import mekanism.client.SpecialColors;
@@ -13,8 +15,6 @@ import mekanism.generators.client.GeneratorsSpecialColors;
 import com.nanaios.CompactMekanismMachinesPlus.client.gui.element.GuiFusionReactorTab.FusionReactorTab;
 import mekanism.generators.common.GeneratorsLang;
 import mekanism.generators.common.MekanismGenerators;
-import mekanism.generators.common.network.to_server.PacketGeneratorsGuiButtonPress;
-import mekanism.generators.common.network.to_server.PacketGeneratorsGuiButtonPress.ClickedGeneratorsTileButton;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
@@ -25,17 +25,17 @@ public class GuiFusionReactorTab extends GuiTabElementType<TileEntityCompactFusi
     }
 
     public enum FusionReactorTab implements TabType<TileEntityCompactFusionReactor> {
-        HEAT(MekanismUtils.getResource(ResourceType.GUI, "heat.png"), GeneratorsLang.HEAT_TAB, 6, ClickedGeneratorsTileButton.TAB_HEAT, GeneratorsSpecialColors.TAB_MULTIBLOCK_HEAT),
-        FUEL(MekanismGenerators.rl(ResourceType.GUI.getPrefix() + "fuel.png"), GeneratorsLang.FUEL_TAB, 34, ClickedGeneratorsTileButton.TAB_FUEL, GeneratorsSpecialColors.TAB_MULTIBLOCK_FUEL),
-        STAT(MekanismUtils.getResource(ResourceType.GUI, "stats.png"), GeneratorsLang.STATS_TAB, 62, ClickedGeneratorsTileButton.TAB_STATS, SpecialColors.TAB_MULTIBLOCK_STATS);
+        HEAT(MekanismUtils.getResource(ResourceType.GUI, "heat.png"), GeneratorsLang.HEAT_TAB, 6, ClickedCompactTileButton.TAB_HEAT, GeneratorsSpecialColors.TAB_MULTIBLOCK_HEAT),
+        FUEL(MekanismGenerators.rl(ResourceType.GUI.getPrefix() + "fuel.png"), GeneratorsLang.FUEL_TAB, 34, ClickedCompactTileButton.TAB_FUEL, GeneratorsSpecialColors.TAB_MULTIBLOCK_FUEL),
+        STAT(MekanismUtils.getResource(ResourceType.GUI, "stats.png"), GeneratorsLang.STATS_TAB, 62, ClickedCompactTileButton.TAB_STATS, SpecialColors.TAB_MULTIBLOCK_STATS);
 
-        private final ClickedGeneratorsTileButton button;
+        private final ClickedCompactTileButton button;
         private final ColorRegistryObject colorRO;
         private final ILangEntry description;
         private final ResourceLocation path;
         private final int yPos;
 
-        FusionReactorTab(ResourceLocation path, ILangEntry description, int y, ClickedGeneratorsTileButton button, ColorRegistryObject colorRO) {
+        FusionReactorTab(ResourceLocation path, ILangEntry description, int y, ClickedCompactTileButton button, ColorRegistryObject colorRO) {
             this.path = path;
             this.description = description;
             this.yPos = y;
@@ -49,7 +49,7 @@ public class GuiFusionReactorTab extends GuiTabElementType<TileEntityCompactFusi
         }
 
         public void onClick(TileEntityCompactFusionReactor tile) {
-            MekanismGenerators.packetHandler().sendToServer(new PacketGeneratorsGuiButtonPress(button, tile.getBlockPos()));
+            MekanismGenerators.packetHandler().sendToServer(new PacketCompactGuiButtonPress(button, tile.getBlockPos()));
         }
 
         @Override
