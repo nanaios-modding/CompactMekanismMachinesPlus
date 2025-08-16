@@ -13,6 +13,7 @@ public class CompactPlusBlockTypes {
     static {
         COMPACT_FUSION_REACTOR = Generator.GeneratorBuilder.createGenerator(() ->CompactPlusTileEntityTypes.COMPACT_FISSION_REACTOR, GeneratorsLang.DESCRIPTION_FUSION_REACTOR_CONTROLLER)
                 .withEnergyConfig(() -> FloatingLong.create(4000000))
+                .withGui(() -> CompactPlusContainerTypes.COMPACT_FUSION_REACTOR, GeneratorsLang.FUSION_REACTOR)
                 .build();
     }
 }
