@@ -2,10 +2,12 @@ package com.nanaios.CompactMekanismMachinesPlus.common.tile;
 
 import com.nanaios.CompactMekanismMachinesPlus.common.registries.CompactPlusBlocks;
 import mekanism.api.Action;
+import mekanism.api.AutomationType;
 import mekanism.api.IContentsListener;
 import mekanism.api.chemical.ChemicalTankBuilder;
 import mekanism.api.chemical.gas.Gas;
 import mekanism.api.chemical.gas.GasStack;
+import mekanism.api.chemical.gas.IGasHandler;
 import mekanism.api.chemical.gas.IGasTank;
 import mekanism.api.energy.IEnergyContainer;
 import mekanism.api.fluid.IExtendedFluidTank;
@@ -13,9 +15,11 @@ import mekanism.api.heat.HeatAPI;
 import mekanism.api.heat.IHeatCapacitor;
 import mekanism.api.math.FloatingLong;
 import mekanism.api.math.MathUtils;
+import mekanism.common.capabilities.Capabilities;
 import mekanism.common.capabilities.energy.MachineEnergyContainer;
 import mekanism.common.capabilities.fluid.VariableCapacityFluidTank;
 import mekanism.common.capabilities.heat.CachedAmbientTemperature;
+import mekanism.common.capabilities.heat.ITileHeatHandler;
 import mekanism.common.capabilities.heat.VariableHeatCapacitor;
 import mekanism.common.capabilities.holder.chemical.ChemicalTankHelper;
 import mekanism.common.capabilities.holder.chemical.IChemicalTankHolder;
@@ -29,6 +33,7 @@ import mekanism.common.capabilities.holder.slot.IInventorySlotHolder;
 import mekanism.common.capabilities.holder.slot.InventorySlotHelper;
 import mekanism.common.inventory.container.sync.dynamic.ContainerSync;
 import mekanism.common.lib.transmitter.TransmissionType;
+import mekanism.common.registries.MekanismGases;
 import mekanism.common.tags.MekanismTags;
 import mekanism.common.tile.component.TileComponentConfig;
 import mekanism.common.tile.component.TileComponentEjector;
@@ -41,6 +46,7 @@ import mekanism.generators.common.registries.GeneratorsGases;
 import mekanism.generators.common.slot.ReactorInventorySlot;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
 
@@ -48,6 +54,7 @@ import mekanism.generators.common.content.fusion.FusionReactorMultiblockData;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.Nonnull;
+import java.util.Optional;
 
 public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachine {
 
@@ -114,8 +121,12 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
 
     public double plasmaTemperature;
 
+    private boolean clientBurning;
+    private double clientTemp;
+
     public TileEntityCompactFusionReactor(BlockPos pos, BlockState state) {
         super(CompactPlusBlocks.COMPACT_FUSION_REACTOR, pos, state);
+
         configComponent = new TileComponentConfig(this, TransmissionType.GAS,TransmissionType.FLUID,TransmissionType.ENERGY);
 
         biomeAmbientTemp = HeatAPI.getAmbientTemp(this.getLevel(),pos);
@@ -128,7 +139,112 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
                 .setCanEject(type -> MekanismUtils.canFunction(this));
     }
 
+    //update系統
+
+    @Override
+    public void onUpdateServer() {
+        super.onUpdateServer();
+
+        long fuelBurned = 0;
+        //Only thermal transfer happens unless we're hot enough to burn.
+        if (getPlasmaTemp() >= burnTemperature) {
+            //If we're not burning, yet we need a hohlraum to ignite
+            if (!burning && hasHohlraum()) {
+                vaporiseHohlraum();
+            }
+
+            //Only inject fuel if we're burning
+            if (isBurning()) {
+                injectFuel();
+                fuelBurned = burnFuel();
+                if (fuelBurned == 0) {
+                    setBurning(false);
+                }
+            }
+        } else {
+            setBurning(false);
+        }
+
+        if (lastBurned != fuelBurned) {
+            lastBurned = fuelBurned;
+        }
+
+        //Perform the heat transfer calculations
+        transferHeat();
+        updateHeatCapacitors(null);
+        updateTemperatures();
+
+        if (isBurning() != clientBurning || Math.abs(getLastPlasmaTemp() - clientTemp) > 1_000_000) {
+            clientBurning = isBurning();
+            clientTemp = getLastPlasmaTemp();
+        }
+    }
+
+
     //以下融合炉メソッド
+
+    public void updateTemperatures() {
+        lastPlasmaTemperature = getPlasmaTemp();
+        lastCaseTemperature = heatCapacitor.getTemperature();
+    }
+
+    private boolean hasHohlraum() {
+        if (!reactorSlot.isEmpty()) {
+            ItemStack hohlraum = reactorSlot.getStack();
+            if (hohlraum.getItem() instanceof ItemHohlraum) {
+                Optional<IGasHandler> capability = hohlraum.getCapability(Capabilities.GAS_HANDLER).resolve();
+                if (capability.isPresent()) {
+                    IGasHandler gasHandlerItem = capability.get();
+                    if (gasHandlerItem.getTanks() > 0) {
+                        //Validate something didn't go terribly wrong, and we actually do have the tank we expect to have
+                        return gasHandlerItem.getChemicalInTank(0).getAmount() == gasHandlerItem.getTankCapacity(0);
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private void injectFuel() {
+        long amountNeeded = fuelTank.getNeeded();
+        long amountAvailable = 2 * Math.min(deuteriumTank.getStored(), tritiumTank.getStored());
+        long amountToInject = Math.min(amountNeeded, Math.min(amountAvailable, injectionRate));
+        amountToInject -= amountToInject % 2;
+        long injectingAmount = amountToInject / 2;
+        MekanismUtils.logMismatchedStackSize(deuteriumTank.shrinkStack(injectingAmount, Action.EXECUTE), injectingAmount);
+        MekanismUtils.logMismatchedStackSize(tritiumTank.shrinkStack(injectingAmount, Action.EXECUTE), injectingAmount);
+        fuelTank.insert(GeneratorsGases.FUSION_FUEL.getStack(amountToInject), Action.EXECUTE, AutomationType.INTERNAL);
+    }
+
+    private void vaporiseHohlraum() {
+        ItemStack hohlraum = reactorSlot.getStack();
+        Optional<IGasHandler> capability = hohlraum.getCapability(Capabilities.GAS_HANDLER).resolve();
+        if (capability.isPresent()) {
+            IGasHandler gasHandlerItem = capability.get();
+            if (gasHandlerItem.getTanks() > 0) {
+                fuelTank.insert(gasHandlerItem.getChemicalInTank(0), Action.EXECUTE, AutomationType.INTERNAL);
+                lastPlasmaTemperature = getPlasmaTemp();
+                reactorSlot.setEmpty();
+                setBurning(true);
+            }
+        }
+    }
+
+    public void setBurning(boolean burn) {
+        if (burning != burn) {
+            burning = burn;
+
+            //markDirty();
+        }
+    }
+
+    private long burnFuel() {
+        long fuelBurned = MathUtils.clampToLong(Mth.clamp((lastPlasmaTemperature - burnTemperature) * burnRatio, 0, fuelTank.getStored()));
+        MekanismUtils.logMismatchedStackSize(fuelTank.shrinkStack(fuelBurned, Action.EXECUTE), fuelBurned);
+        setPlasmaTemp(getPlasmaTemp() + MekanismGeneratorsConfig.generators.energyPerFusionFuel.get().multiply(fuelBurned).divide(plasmaHeatCapacity).doubleValue());
+        return fuelBurned;
+    }
+
 
     public FloatingLong getPassiveGeneration(boolean active, boolean current) {
         double temperature = current ? getLastCaseTemp() : getMaxCasingTemperature(active);
@@ -168,6 +284,39 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
         return 1.0E8 * energyPerFusionFuel * 1.0 * (0.2 + k + caseAirConductivity) / (energyPerFusionFuel * 1.0 * (0.2 + k + caseAirConductivity) - 0.2 * (k + caseAirConductivity));
     }
 
+    private void transferHeat() {
+        //Transfer from plasma to casing
+        double plasmaCaseHeat = plasmaCaseConductivity * (lastPlasmaTemperature - lastCaseTemperature);
+        if (Math.abs(plasmaCaseHeat) > HeatAPI.EPSILON) {
+            setPlasmaTemp(getPlasmaTemp() - plasmaCaseHeat / plasmaHeatCapacity);
+            heatCapacitor.handleHeat(plasmaCaseHeat);
+        }
+
+        //Transfer from casing to water if necessary
+        double caseWaterHeat = MekanismGeneratorsConfig.generators.fusionWaterHeatingRatio.get() * (lastCaseTemperature - biomeAmbientTemp);
+        if (Math.abs(caseWaterHeat) > HeatAPI.EPSILON) {
+            int waterToVaporize = (int) (HeatUtils.getSteamEnergyEfficiency() * caseWaterHeat / HeatUtils.getWaterThermalEnthalpy());
+            waterToVaporize = Math.min(waterToVaporize, Math.min(waterTank.getFluidAmount(), MathUtils.clampToInt(steamTank.getNeeded())));
+            if (waterToVaporize > 0) {
+                MekanismUtils.logMismatchedStackSize(waterTank.shrinkStack(waterToVaporize, Action.EXECUTE), waterToVaporize);
+                steamTank.insert(MekanismGases.STEAM.getStack(waterToVaporize), Action.EXECUTE, AutomationType.INTERNAL);
+                caseWaterHeat = waterToVaporize * HeatUtils.getWaterThermalEnthalpy() / HeatUtils.getSteamEnergyEfficiency();
+                heatCapacitor.handleHeat(-caseWaterHeat);
+            }
+        }
+
+        HeatAPI.HeatTransfer heatTransfer = simulate();
+        lastEnvironmentLoss = heatTransfer.environmentTransfer();
+        lastTransferLoss = heatTransfer.adjacentTransfer();
+
+        //Passive energy generation
+        double caseAirHeat = MekanismGeneratorsConfig.generators.fusionCasingThermalConductivity.get() * (lastCaseTemperature - biomeAmbientTemp);
+        if (Math.abs(caseAirHeat) > HeatAPI.EPSILON) {
+            heatCapacitor.handleHeat(-caseAirHeat);
+            energyContainer.insert(FloatingLong.create(caseAirHeat * MekanismGeneratorsConfig.generators.fusionThermocoupleEfficiency.get()), Action.EXECUTE, AutomationType.INTERNAL);
+        }
+    }
+
     public long getSteamPerTick(boolean current) {
         double temperature = current ? this.getLastCaseTemp() : this.getMaxCasingTemperature(true);
         return MathUtils.clampToLong(HeatUtils.getSteamEnergyEfficiency() * MekanismGeneratorsConfig.generators.fusionWaterHeatingRatio.get() * temperature / HeatUtils.getWaterThermalEnthalpy());
@@ -186,6 +335,14 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
                     steamTank.setStackSize(Math.min(steamTank.getStored(), steamTank.getCapacity()), Action.EXECUTE);
                 }
             }
+            //markDirty();
+        }
+    }
+
+    public void setPlasmaTemp(double temp) {
+        if (plasmaTemperature != temp) {
+            plasmaTemperature = temp;
+
             //markDirty();
         }
     }
@@ -211,6 +368,10 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
     }
 
     public boolean isBurning() {return burning;}
+
+    public double getPlasmaTemp() {
+        return plasmaTemperature;
+    }
 
     private static double getInverseConductionCoefficient() {
         return 1 / MekanismGeneratorsConfig.generators.fusionCasingThermalConductivity.get();
