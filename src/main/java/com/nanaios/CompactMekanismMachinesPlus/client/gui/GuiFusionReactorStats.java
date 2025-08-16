@@ -31,6 +31,9 @@ public class GuiFusionReactorStats extends GuiFusionReactorInfo {
 
     @Override
     protected void drawForegroundText(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY) {
+
+
+
         renderTitleText(guiGraphics);
         drawString(guiGraphics, GeneratorsLang.REACTOR_PASSIVE.translateColored(EnumColor.DARK_GREEN), 6, 26, titleTextColor());
         drawTextScaledBound(guiGraphics, GeneratorsLang.REACTOR_MIN_INJECTION.translate(tile.getMinInjectionRate(false)), 16, 36, titleTextColor(), 156);

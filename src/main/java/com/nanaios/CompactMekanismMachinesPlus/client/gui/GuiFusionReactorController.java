@@ -5,6 +5,7 @@ import java.util.List;
 import com.nanaios.CompactMekanismMachinesPlus.client.gui.element.GuiFusionReactorTab;
 import com.nanaios.CompactMekanismMachinesPlus.client.gui.element.GuiFusionReactorTab.FusionReactorTab;
 import com.nanaios.CompactMekanismMachinesPlus.common.tile.TileEntityCompactFusionReactor;
+import mekanism.client.gui.GuiConfigurableTile;
 import mekanism.client.gui.GuiMekanismTile;
 import mekanism.client.gui.element.tab.GuiEnergyTab;
 import mekanism.client.gui.element.tab.GuiHeatTab;
@@ -19,7 +20,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import org.jetbrains.annotations.NotNull;
 
-public class GuiFusionReactorController extends GuiMekanismTile<TileEntityCompactFusionReactor, MekanismTileContainer<TileEntityCompactFusionReactor>> {
+public class GuiFusionReactorController extends GuiConfigurableTile<TileEntityCompactFusionReactor, MekanismTileContainer<TileEntityCompactFusionReactor>> {
 
     public GuiFusionReactorController(MekanismTileContainer<TileEntityCompactFusionReactor> container, Inventory inv, Component title) {
         super(container, inv, title);
@@ -43,6 +44,8 @@ public class GuiFusionReactorController extends GuiMekanismTile<TileEntityCompac
         addRenderableWidget(new GuiFusionReactorTab(this, tile, FusionReactorTab.HEAT));
         addRenderableWidget(new GuiFusionReactorTab(this, tile, FusionReactorTab.FUEL));
         addRenderableWidget(new GuiFusionReactorTab(this, tile, FusionReactorTab.STAT));
+
+        System.out.println("init Compact Controller Gui ");
     }
 
     @Override
