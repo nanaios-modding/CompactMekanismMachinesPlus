@@ -1,11 +1,10 @@
 package com.nanaios.CompactMekanismMachinesPlus.common.network.to_server;
 
+import com.nanaios.CompactMekanismMachinesPlus.common.tile.TileEntityCompactFusionReactor;
 import mekanism.api.functions.TriConsumer;
 import mekanism.common.network.IMekanismPacket;
 import mekanism.common.tile.base.TileEntityMekanism;
 import mekanism.common.util.WorldUtils;
-import mekanism.generators.common.tile.fission.TileEntityFissionReactorCasing;
-import mekanism.generators.common.tile.fusion.TileEntityFusionReactorBlock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.player.Player;
@@ -60,7 +59,7 @@ public class PacketCompactPlusGuiInteract implements IMekanismPacket {
 
     public enum CompactPlusGuiInteraction {
         INJECTION_RATE((tile, player, extra) -> {
-            if (tile instanceof TileEntityFusionReactorBlock reactorBlock) {
+            if (tile instanceof TileEntityCompactFusionReactor reactorBlock) {
                 reactorBlock.setInjectionRateFromPacket((int) Math.round(extra));
             }
         });

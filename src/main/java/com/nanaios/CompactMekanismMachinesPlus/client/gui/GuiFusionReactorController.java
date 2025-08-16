@@ -8,6 +8,8 @@ import com.nanaios.CompactMekanismMachinesPlus.common.tile.TileEntityCompactFusi
 import mekanism.client.gui.GuiConfigurableTile;
 import mekanism.client.gui.element.tab.GuiEnergyTab;
 import mekanism.client.gui.element.tab.GuiHeatTab;
+import mekanism.client.gui.element.tab.window.GuiSideConfigurationTab;
+import mekanism.client.gui.element.tab.window.GuiTransporterConfigTab;
 import mekanism.common.MekanismLang;
 import mekanism.common.inventory.container.tile.MekanismTileContainer;
 import mekanism.common.util.MekanismUtils;
@@ -30,6 +32,7 @@ public class GuiFusionReactorController extends GuiConfigurableTile<TileEntityCo
     @Override
     protected void addGuiElements() {
         super.addGuiElements();
+
         addRenderableWidget(new GuiEnergyTab(this, () -> {
             return List.of(MekanismLang.STORING.translate(EnergyDisplay.of(tile.energyContainer)),
                     GeneratorsLang.PRODUCING_AMOUNT.translate(EnergyDisplay.of(tile.getPassiveGeneration(false, true))));
@@ -44,7 +47,14 @@ public class GuiFusionReactorController extends GuiConfigurableTile<TileEntityCo
         addRenderableWidget(new GuiFusionReactorTab(this, tile, FusionReactorTab.FUEL));
         addRenderableWidget(new GuiFusionReactorTab(this, tile, FusionReactorTab.STAT));
 
-        System.out.println("init Compact Controller Gui ");
+        //configとtransporterのタブを左に動かす
+        renderables.forEach(element -> {
+            if(element instanceof GuiSideConfigurationTab<?> tab) {
+                tab.move(-26,0);
+            } else if(element instanceof GuiTransporterConfigTab<?> tab) {
+                tab.move(-26,0);
+            }
+        });
     }
 
     @Override
