@@ -1,12 +1,10 @@
 package com.nanaios.CompactMekanismMachinesPlus.common.tile;
 
 import com.nanaios.CompactMekanismMachinesPlus.common.CompactMekanismMachinesPlus;
+import com.nanaios.CompactMekanismMachinesPlus.common.registries.CompactPlusContainerTypes;
+import mekanism.api.*;
 import mekanism.api.lasers.ILaserReceptor;
 import com.nanaios.CompactMekanismMachinesPlus.common.registries.CompactPlusBlocks;
-import mekanism.api.Action;
-import mekanism.api.AutomationType;
-import mekanism.api.IContentsListener;
-import mekanism.api.RelativeSide;
 import mekanism.api.chemical.ChemicalTankBuilder;
 import mekanism.api.chemical.gas.Gas;
 import mekanism.api.chemical.gas.GasStack;
@@ -33,7 +31,9 @@ import mekanism.common.capabilities.holder.heat.HeatCapacitorHelper;
 import mekanism.common.capabilities.holder.heat.IHeatCapacitorHolder;
 import mekanism.common.capabilities.holder.slot.IInventorySlotHolder;
 import mekanism.common.capabilities.holder.slot.InventorySlotHelper;
+import mekanism.common.inventory.container.MekanismContainer;
 import mekanism.common.inventory.container.sync.dynamic.ContainerSync;
+import mekanism.common.inventory.container.sync.dynamic.SyncMapper;
 import mekanism.common.lib.transmitter.TransmissionType;
 import mekanism.common.registries.MekanismGases;
 import mekanism.common.tags.MekanismTags;
@@ -43,6 +43,7 @@ import mekanism.common.tile.component.config.ConfigInfo;
 import mekanism.common.tile.component.config.DataType;
 import mekanism.common.tile.component.config.slot.ChemicalSlotInfo;
 import mekanism.common.tile.component.config.slot.EnergySlotInfo;
+import mekanism.common.tile.component.config.slot.FluidSlotInfo;
 import mekanism.common.tile.prefab.TileEntityConfigurableMachine;
 import mekanism.common.util.HeatUtils;
 import mekanism.common.util.MekanismUtils;
@@ -51,6 +52,7 @@ import mekanism.generators.common.item.ItemHohlraum;
 import mekanism.generators.common.registries.GeneratorsGases;
 import mekanism.generators.common.slot.ReactorInventorySlot;
 import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
@@ -60,6 +62,7 @@ import mekanism.generators.common.content.fusion.FusionReactorMultiblockData;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.Nonnull;
+import javax.xml.crypto.Data;
 import java.util.Optional;
 
 public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachine implements ILaserReceptor {
@@ -141,9 +144,11 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
 
         ConfigInfo gasConfig = configComponent.getConfig(TransmissionType.GAS);
         if (gasConfig !=null){
+            gasConfig.addSlotInfo( DataType.INPUT, new ChemicalSlotInfo.GasSlotInfo(true,false, fuelTank));
             gasConfig.addSlotInfo( DataType.INPUT_1, new ChemicalSlotInfo.GasSlotInfo(true,false, deuteriumTank));
             gasConfig.addSlotInfo( DataType.INPUT_2, new ChemicalSlotInfo.GasSlotInfo(true,false, tritiumTank));
-            gasConfig.addSlotInfo( DataType.OUTPUT, new ChemicalSlotInfo.GasSlotInfo(true,false, steamTank));
+            gasConfig.addSlotInfo( DataType.OUTPUT, new ChemicalSlotInfo.GasSlotInfo(false,true, steamTank));
+            gasConfig.setDataType(DataType.INPUT, RelativeSide.TOP);
             gasConfig.setDataType(DataType.INPUT_1, RelativeSide.LEFT);
             gasConfig.setDataType(DataType.INPUT_2, RelativeSide.RIGHT);
             gasConfig.setDataType(DataType.OUTPUT, RelativeSide.BOTTOM);
@@ -153,6 +158,12 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
         if(energyConfig != null) {
             energyConfig.addSlotInfo(DataType.OUTPUT,new EnergySlotInfo(false,true,energyContainer));
             energyConfig.setDataType(DataType.OUTPUT,RelativeSide.FRONT);
+        }
+
+        ConfigInfo fluidConfig = configComponent.getConfig(TransmissionType.FLUID);
+        if(fluidConfig != null) {
+            fluidConfig.addSlotInfo(DataType.INPUT,new FluidSlotInfo(true,false,waterTank));
+            fluidConfig.setDataType(DataType.INPUT,RelativeSide.BACK);
         }
 
 
@@ -266,7 +277,6 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
             if (gasHandlerItem.getTanks() > 0) {
                 fuelTank.insert(gasHandlerItem.getChemicalInTank(0), Action.EXECUTE, AutomationType.INTERNAL);
 
-                // plasma温度がリセットされてる？？？？なんで？？？
                 lastPlasmaTemperature = getPlasmaTemp();
 
                 reactorSlot.setEmpty();
@@ -298,7 +308,6 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
     }
 
     public double getLastCaseTemp() {
-        //CompactMekanismMachinesPlus.LOGGER.info(String.format("last plasma temp[server] to %f.",this.lastCaseTemperature));
         return lastCaseTemperature;
     }
 
@@ -425,6 +434,7 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
     }
 
     public void setInjectionRateFromPacket(int rate) {
+        CompactMekanismMachinesPlus.LOGGER.info("set rate to {}.", rate);
         this.setInjectionRate(Mth.clamp(rate - (rate % 2), 0, FusionReactorMultiblockData.MAX_INJECTION));
         markForSave();
     }
@@ -458,7 +468,7 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
     @NotNull
     @Override
     protected IEnergyContainerHolder getInitialEnergyContainers(IContentsListener listener) {
-        EnergyContainerHelper builder = EnergyContainerHelper.forSide(this::getDirection);
+        EnergyContainerHelper builder = EnergyContainerHelper.forSideWithConfig(this::getDirection,this::getConfig);
         builder.addContainer(energyContainer = MachineEnergyContainer.output(MekanismGeneratorsConfig.generators.fusionEnergyCapacity.get(),listener));
         return builder.build();
     }
@@ -471,7 +481,41 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
         return builder.build();
     }
 
+    //セーブ系統
+
+    @Override
+    public void load(CompoundTag nbtTags) {
+        plasmaTemperature = nbtTags.getDouble(NBTConstants.PLASMA_TEMP);
+        injectionRate = nbtTags.getInt(NBTConstants.INJECTION_RATE);
+        burning = nbtTags.getBoolean(NBTConstants.BURNING);
+    }
+
+    @Override
+    public void saveAdditional(CompoundTag nbtTags) {
+        super.saveAdditional(nbtTags);
+        nbtTags.putDouble(NBTConstants.PLASMA_TEMP, plasmaTemperature);
+        nbtTags.putInt(NBTConstants.INJECTION_RATE, getInjectionRate());
+        nbtTags.putBoolean(NBTConstants.BURNING, burning);
+    }
+
     //その他
+
+
+    @Override
+    public void addContainerTrackers(MekanismContainer container) {
+        super.addContainerTrackers(container);
+        if (container.getType() == CompactPlusContainerTypes.COMPACT_FUSION_REACTOR_FUEL.get()) {
+            addTabContainerTracker(container,TileEntityCompactFusionReactor.FUEL_TAB);
+        } else if (container.getType() == CompactPlusContainerTypes.COMPACT_FUSION_REACTOR_HEAT.get()) {
+            addTabContainerTracker(container,TileEntityCompactFusionReactor.HEAT_TAB);
+        } else if (container.getType() == CompactPlusContainerTypes.COMPACT_FUSION_REACTOR_STATS.get()) {
+            addTabContainerTracker(container,TileEntityCompactFusionReactor.STATS_TAB);
+        }
+    }
+
+    private void addTabContainerTracker(MekanismContainer container, String tab) {
+        SyncMapper.INSTANCE.setup(container, TileEntityCompactFusionReactor.class, ()-> this, tab);
+    }
 
     protected IContentsListener createSaveAndComparator() {
         return this.createSaveAndComparator(this);
