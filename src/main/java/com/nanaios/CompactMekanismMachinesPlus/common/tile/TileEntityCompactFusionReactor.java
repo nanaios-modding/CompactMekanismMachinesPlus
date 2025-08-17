@@ -62,7 +62,6 @@ import mekanism.generators.common.content.fusion.FusionReactorMultiblockData;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.Nonnull;
-import javax.xml.crypto.Data;
 import java.util.Optional;
 
 public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachine implements ILaserReceptor {
@@ -288,7 +287,6 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
     public void setBurning(boolean burn) {
         if (burning != burn) {
             burning = burn;
-
             //markDirty();
         }
     }
@@ -484,10 +482,13 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
     //セーブ系統
 
     @Override
-    public void load(CompoundTag nbtTags) {
+    public void load(@NotNull CompoundTag nbtTags) {
+        super.load(nbtTags);
         plasmaTemperature = nbtTags.getDouble(NBTConstants.PLASMA_TEMP);
         injectionRate = nbtTags.getInt(NBTConstants.INJECTION_RATE);
         burning = nbtTags.getBoolean(NBTConstants.BURNING);
+
+        updateTemperatures();
     }
 
     @Override
@@ -496,6 +497,8 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
         nbtTags.putDouble(NBTConstants.PLASMA_TEMP, plasmaTemperature);
         nbtTags.putInt(NBTConstants.INJECTION_RATE, getInjectionRate());
         nbtTags.putBoolean(NBTConstants.BURNING, burning);
+
+        CompactMekanismMachinesPlus.LOGGER.info("now isBurning = {}", burning);
     }
 
     //その他
@@ -524,9 +527,9 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
     protected IContentsListener createSaveAndComparator(IContentsListener contentsListener) {
         return () -> {
             contentsListener.onContentsChanged();
-            if (!this.isRemote()) {
+            /* if (!this.isRemote()) {
                 this.markDirtyComparator();
-            }
+            } */
 
         };
     }
