@@ -1,5 +1,7 @@
 package com.nanaios.CompactMekanismMachinesPlus.common.tile;
 
+import com.nanaios.CompactMekanismMachinesPlus.common.CompactMekanismMachinesPlus;
+import mekanism.api.lasers.ILaserReceptor;
 import com.nanaios.CompactMekanismMachinesPlus.common.registries.CompactPlusBlocks;
 import mekanism.api.Action;
 import mekanism.api.AutomationType;
@@ -40,6 +42,7 @@ import mekanism.common.tile.component.TileComponentEjector;
 import mekanism.common.tile.component.config.ConfigInfo;
 import mekanism.common.tile.component.config.DataType;
 import mekanism.common.tile.component.config.slot.ChemicalSlotInfo;
+import mekanism.common.tile.component.config.slot.EnergySlotInfo;
 import mekanism.common.tile.prefab.TileEntityConfigurableMachine;
 import mekanism.common.util.HeatUtils;
 import mekanism.common.util.MekanismUtils;
@@ -59,7 +62,7 @@ import org.jetbrains.annotations.Nullable;
 import javax.annotation.Nonnull;
 import java.util.Optional;
 
-public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachine {
+public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachine implements ILaserReceptor {
 
     public static final String HEAT_TAB = FusionReactorMultiblockData.HEAT_TAB;
     public static final String FUEL_TAB =  FusionReactorMultiblockData.FUEL_TAB;
@@ -139,9 +142,18 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
         ConfigInfo gasConfig = configComponent.getConfig(TransmissionType.GAS);
         if (gasConfig !=null){
             gasConfig.addSlotInfo( DataType.INPUT_1, new ChemicalSlotInfo.GasSlotInfo(true,false, deuteriumTank));
+            gasConfig.addSlotInfo( DataType.INPUT_2, new ChemicalSlotInfo.GasSlotInfo(true,false, tritiumTank));
+            gasConfig.addSlotInfo( DataType.OUTPUT, new ChemicalSlotInfo.GasSlotInfo(true,false, steamTank));
             gasConfig.setDataType(DataType.INPUT_1, RelativeSide.LEFT);
+            gasConfig.setDataType(DataType.INPUT_2, RelativeSide.RIGHT);
+            gasConfig.setDataType(DataType.OUTPUT, RelativeSide.BOTTOM);
         }
 
+        ConfigInfo energyConfig = configComponent.getConfig(TransmissionType.ENERGY);
+        if(energyConfig != null) {
+            energyConfig.addSlotInfo(DataType.OUTPUT,new EnergySlotInfo(false,true,energyContainer));
+            energyConfig.setDataType(DataType.OUTPUT,RelativeSide.FRONT);
+        }
 
 
         ejectorComponent = new TileComponentEjector(this, ()->Long.MAX_VALUE,()->Integer.MAX_VALUE,()-> FloatingLong.create(Long.MAX_VALUE));
@@ -181,8 +193,9 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
 
         //Perform the heat transfer calculations
         transferHeat();
-        updateHeatCapacitors(null);
+        //updateHeatCapacitors(null);
         updateTemperatures();
+
 
         if (isBurning() != clientBurning || Math.abs(getLastPlasmaTemp() - clientTemp) > 1_000_000) {
             clientBurning = isBurning();
@@ -190,8 +203,27 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
         }
     }
 
+    //以下レーザメソッド系統
+    @Override
+    public boolean canLasersDig() {
+        return false;
+    }
+
+    @Override
+    public void receiveLaserEnergy(@NotNull FloatingLong energy) {
+        this.addTemperatureFromEnergyInput(energy);
+    }
+
 
     //以下融合炉メソッド
+
+    public void addTemperatureFromEnergyInput(FloatingLong energyAdded) {
+        if (isBurning()) {
+            setPlasmaTemp(getPlasmaTemp() + energyAdded.divide(plasmaHeatCapacity).doubleValue());
+        } else {
+            setPlasmaTemp(getPlasmaTemp() + energyAdded.divide(plasmaHeatCapacity).multiply(10).doubleValue());
+        }
+    }
 
     public void updateTemperatures() {
         lastPlasmaTemperature = getPlasmaTemp();
@@ -233,7 +265,10 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
             IGasHandler gasHandlerItem = capability.get();
             if (gasHandlerItem.getTanks() > 0) {
                 fuelTank.insert(gasHandlerItem.getChemicalInTank(0), Action.EXECUTE, AutomationType.INTERNAL);
+
+                // plasma温度がリセットされてる？？？？なんで？？？
                 lastPlasmaTemperature = getPlasmaTemp();
+
                 reactorSlot.setEmpty();
                 setBurning(true);
             }
@@ -263,6 +298,7 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
     }
 
     public double getLastCaseTemp() {
+        //CompactMekanismMachinesPlus.LOGGER.info(String.format("last plasma temp[server] to %f.",this.lastCaseTemperature));
         return lastCaseTemperature;
     }
 
@@ -351,6 +387,7 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
 
     public void setPlasmaTemp(double temp) {
         if (plasmaTemperature != temp) {
+            //CompactMekanismMachinesPlus.LOGGER.info(String.format("set plasma temp to %f.",temp));
             plasmaTemperature = temp;
 
             //markDirty();

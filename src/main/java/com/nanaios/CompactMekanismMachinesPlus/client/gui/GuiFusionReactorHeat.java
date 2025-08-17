@@ -2,6 +2,7 @@ package com.nanaios.CompactMekanismMachinesPlus.client.gui;
 
 import com.nanaios.CompactMekanismMachinesPlus.client.gui.element.GuiFusionReactorTab;
 import com.nanaios.CompactMekanismMachinesPlus.client.gui.element.GuiFusionReactorTab.FusionReactorTab;
+import com.nanaios.CompactMekanismMachinesPlus.common.CompactMekanismMachinesPlus;
 import com.nanaios.CompactMekanismMachinesPlus.common.tile.TileEntityCompactFusionReactor;
 import mekanism.client.gui.element.gauge.GaugeType;
 import mekanism.client.gui.element.gauge.GuiEnergyGauge;
@@ -67,6 +68,7 @@ public class GuiFusionReactorHeat extends GuiFusionReactorInfo {
 
             @Override
             public double getLevel() {
+                //CompactMekanismMachinesPlus.LOGGER.info(String.format("last case temp[client] to %f.",tile.getLastCaseTemp()));
                 return tile.getLastCaseTemp();
             }
 
