@@ -497,8 +497,6 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
         nbtTags.putDouble(NBTConstants.PLASMA_TEMP, plasmaTemperature);
         nbtTags.putInt(NBTConstants.INJECTION_RATE, getInjectionRate());
         nbtTags.putBoolean(NBTConstants.BURNING, burning);
-
-        CompactMekanismMachinesPlus.LOGGER.info("now isBurning = {}", burning);
     }
 
     //その他
