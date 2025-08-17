@@ -35,6 +35,7 @@ import mekanism.common.inventory.container.MekanismContainer;
 import mekanism.common.inventory.container.sync.dynamic.ContainerSync;
 import mekanism.common.inventory.container.sync.dynamic.SyncMapper;
 import mekanism.common.lib.transmitter.TransmissionType;
+import mekanism.common.registries.MekanismFluids;
 import mekanism.common.registries.MekanismGases;
 import mekanism.common.tags.MekanismTags;
 import mekanism.common.tile.component.TileComponentConfig;
@@ -53,9 +54,13 @@ import mekanism.generators.common.registries.GeneratorsGases;
 import mekanism.generators.common.slot.ReactorInventorySlot;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.tags.FluidTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.level.material.Fluids;
+import net.minecraftforge.fluids.FluidStack;
 import org.jetbrains.annotations.NotNull;
 
 import mekanism.generators.common.content.fusion.FusionReactorMultiblockData;
@@ -177,6 +182,8 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
     public void onUpdateServer() {
         super.onUpdateServer();
 
+        //injectWater();
+
         long fuelBurned = 0;
         //Only thermal transfer happens unless we're hot enough to burn.
         if (getPlasmaTemp() >= burnTemperature) {
@@ -203,7 +210,7 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
 
         //Perform the heat transfer calculations
         transferHeat();
-        //updateHeatCapacitors(null);
+        updateHeatCapacitors(null);
         updateTemperatures();
 
 
