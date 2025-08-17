@@ -35,6 +35,7 @@ import mekanism.common.capabilities.resolver.BasicCapabilityResolver;
 import mekanism.common.inventory.container.MekanismContainer;
 import mekanism.common.inventory.container.sync.dynamic.ContainerSync;
 import mekanism.common.inventory.container.sync.dynamic.SyncMapper;
+import mekanism.common.inventory.slot.InputInventorySlot;
 import mekanism.common.lib.transmitter.TransmissionType;
 import mekanism.common.registries.MekanismFluids;
 import mekanism.common.registries.MekanismGases;
@@ -46,6 +47,7 @@ import mekanism.common.tile.component.config.DataType;
 import mekanism.common.tile.component.config.slot.ChemicalSlotInfo;
 import mekanism.common.tile.component.config.slot.EnergySlotInfo;
 import mekanism.common.tile.component.config.slot.FluidSlotInfo;
+import mekanism.common.tile.component.config.slot.InventorySlotInfo;
 import mekanism.common.tile.prefab.TileEntityConfigurableMachine;
 import mekanism.common.util.HeatUtils;
 import mekanism.common.util.MekanismUtils;
@@ -131,7 +133,7 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
     @ContainerSync(tags = {FUEL_TAB, HEAT_TAB, STATS_TAB})
     private long lastBurned;
 
-    private ReactorInventorySlot reactorSlot;
+    private InputInventorySlot reactorSlot;
 
     public double plasmaTemperature;
 
@@ -143,7 +145,7 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
 
         addCapabilityResolver(BasicCapabilityResolver.constant(Capabilities.LASER_RECEPTOR, this));
 
-        configComponent = new TileComponentConfig(this, TransmissionType.GAS,TransmissionType.FLUID,TransmissionType.ENERGY);
+        configComponent = new TileComponentConfig(this,TransmissionType.ITEM, TransmissionType.GAS,TransmissionType.FLUID,TransmissionType.ENERGY);
 
         biomeAmbientTemp = HeatAPI.getAmbientTemp(this.getLevel(),pos);
         lastPlasmaTemperature = biomeAmbientTemp;
@@ -165,19 +167,24 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
         ConfigInfo energyConfig = configComponent.getConfig(TransmissionType.ENERGY);
         if(energyConfig != null) {
             energyConfig.addSlotInfo(DataType.OUTPUT,new EnergySlotInfo(false,true,energyContainer));
-            energyConfig.setDataType(DataType.OUTPUT,RelativeSide.FRONT);
+            energyConfig.setDataType(DataType.OUTPUT,RelativeSide.values());
         }
 
         ConfigInfo fluidConfig = configComponent.getConfig(TransmissionType.FLUID);
         if(fluidConfig != null) {
             fluidConfig.addSlotInfo(DataType.INPUT,new FluidSlotInfo(true,false,waterTank));
-            fluidConfig.setDataType(DataType.INPUT,RelativeSide.BACK);
+            fluidConfig.setDataType(DataType.INPUT,RelativeSide.values());
         }
 
+        ConfigInfo itemConfig = configComponent.getConfig(TransmissionType.ITEM);
+        if(itemConfig != null) {
+            itemConfig.addSlotInfo(DataType.INPUT,new InventorySlotInfo(true,false,reactorSlot));
+            itemConfig.setDataType(DataType.INPUT,RelativeSide.values());
+        }
 
         ejectorComponent = new TileComponentEjector(this, ()->Long.MAX_VALUE,()->Integer.MAX_VALUE,()-> FloatingLong.create(Long.MAX_VALUE));
-        ejectorComponent.setOutputData(configComponent, TransmissionType.GAS,TransmissionType.FLUID,TransmissionType.ENERGY)
-                .setCanEject(type -> MekanismUtils.canFunction(this));
+        ejectorComponent.setOutputData(configComponent, TransmissionType.ITEM,TransmissionType.GAS,TransmissionType.FLUID,TransmissionType.ENERGY);
+        ejectorComponent.setCanEject(type -> MekanismUtils.canFunction(this));
     }
 
     //update系統
@@ -487,8 +494,8 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
     @Nonnull
     @Override
     protected IInventorySlotHolder getInitialInventory(IContentsListener listener) {
-        InventorySlotHelper builder = InventorySlotHelper.forSide(this::getDirection);
-        builder.addSlot(reactorSlot = ReactorInventorySlot.at(stack -> stack.getItem() instanceof ItemHohlraum, listener, 80, 39));
+        InventorySlotHelper builder = InventorySlotHelper.forSideWithConfig(this::getDirection,this::getConfig);
+        builder.addSlot(reactorSlot = InputInventorySlot.at(stack -> stack.getItem() instanceof ItemHohlraum, listener, 80, 39));
         return builder.build();
     }
 
