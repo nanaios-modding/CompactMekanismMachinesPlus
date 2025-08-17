@@ -69,7 +69,7 @@ description='''${mod_description}'''
 [[dependencies.${mod_id}]]
 modId="mekanism"
 mandatory=true
-versionRange="[10.4.0.14,)"
+versionRange="[10.4.0,)"
 ordering="AFTER"
 side="BOTH"
 
