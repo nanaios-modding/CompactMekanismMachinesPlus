@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.nanaios.CompactMekanismMachinesPlus.client.gui.element.GuiFusionReactorTab;
 import com.nanaios.CompactMekanismMachinesPlus.client.gui.element.GuiFusionReactorTab.FusionReactorTab;
+import com.nanaios.CompactMekanismMachinesPlus.common.CompactPlusLang;
 import com.nanaios.CompactMekanismMachinesPlus.common.tile.TileEntityCompactFusionReactor;
 import mekanism.client.gui.GuiConfigurableTile;
 import mekanism.client.gui.element.tab.GuiEnergyTab;
@@ -61,6 +62,9 @@ public class GuiFusionReactorController extends GuiConfigurableTile<TileEntityCo
     protected void drawForegroundText(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY) {
         renderTitleText(guiGraphics);
         drawString(guiGraphics, MekanismLang.MULTIBLOCK_FORMED.translate(), 8, 16, titleTextColor());
+        if(tile.isBurning()) {
+            drawString(guiGraphics, CompactPlusLang.FUSION_REACTOR_ACTIVE.translate(),8, 26, titleTextColor());
+        }
         super.drawForegroundText(guiGraphics, mouseX, mouseY);
     }
 }

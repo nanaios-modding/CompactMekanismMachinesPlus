@@ -1,5 +1,5 @@
 {
   "other.compactmekanismmachinesplus.mod_name": "CompactMekanismMachinesPlus",
   "block.compactmekanismmachinesplus.compact_fusion_reactor": "1マス核融合炉",
-  "side_data.compactmekanismmachinesplus.input_3": "搬入(3)"
+  "reactor.compactmekanismmachinesplus.stats.active": "稼働中"
 }

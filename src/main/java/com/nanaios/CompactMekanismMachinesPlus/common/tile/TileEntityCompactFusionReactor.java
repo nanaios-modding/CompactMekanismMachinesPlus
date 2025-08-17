@@ -198,6 +198,7 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
 
             //Only inject fuel if we're burning
             if (isBurning()) {
+                setActive(true);
                 injectFuel();
                 fuelBurned = burnFuel();
                 if (fuelBurned == 0) {
@@ -205,6 +206,7 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
                 }
             }
         } else {
+            setActive(false);
             setBurning(false);
         }
 
@@ -500,6 +502,7 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
         burning = nbtTags.getBoolean(NBTConstants.BURNING);
 
         updateTemperatures();
+
     }
 
     @Override
@@ -511,7 +514,6 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
     }
 
     //その他
-
 
     @Override
     public void addContainerTrackers(MekanismContainer container) {

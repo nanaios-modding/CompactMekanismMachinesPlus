@@ -4,7 +4,7 @@ import mekanism.api.text.ILangEntry;
 import net.minecraft.Util;
 
 public enum CompactPlusLang implements ILangEntry {
-    SIDE_DATA_INPUT_3("side_data", "input_3"),
+    FUSION_REACTOR_ACTIVE("reactor", "stats.active"),
     COMPACTMEKANISMMACHINESPLUS("other","mod_name");
 
     private final String key;
