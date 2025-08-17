@@ -31,6 +31,7 @@ import mekanism.common.capabilities.holder.heat.HeatCapacitorHelper;
 import mekanism.common.capabilities.holder.heat.IHeatCapacitorHolder;
 import mekanism.common.capabilities.holder.slot.IInventorySlotHolder;
 import mekanism.common.capabilities.holder.slot.InventorySlotHelper;
+import mekanism.common.capabilities.resolver.BasicCapabilityResolver;
 import mekanism.common.inventory.container.MekanismContainer;
 import mekanism.common.inventory.container.sync.dynamic.ContainerSync;
 import mekanism.common.inventory.container.sync.dynamic.SyncMapper;
@@ -139,6 +140,9 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
 
     public TileEntityCompactFusionReactor(BlockPos pos, BlockState state) {
         super(CompactPlusBlocks.COMPACT_FUSION_REACTOR, pos, state);
+
+        addCapabilityResolver(BasicCapabilityResolver.constant(Capabilities.LASER_RECEPTOR, this));
+
         configComponent = new TileComponentConfig(this, TransmissionType.GAS,TransmissionType.FLUID,TransmissionType.ENERGY);
 
         biomeAmbientTemp = HeatAPI.getAmbientTemp(this.getLevel(),pos);
