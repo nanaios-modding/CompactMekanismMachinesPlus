@@ -51,14 +51,18 @@ import mekanism.common.tile.component.config.slot.InventorySlotInfo;
 import mekanism.common.tile.prefab.TileEntityConfigurableMachine;
 import mekanism.common.util.HeatUtils;
 import mekanism.common.util.MekanismUtils;
+import mekanism.common.util.WorldUtils;
 import mekanism.generators.common.config.MekanismGeneratorsConfig;
 import mekanism.generators.common.item.ItemHohlraum;
 import mekanism.generators.common.registries.GeneratorsFluids;
 import mekanism.generators.common.registries.GeneratorsGases;
+import net.michanide.mekanismneutronactivator.common.tile.machine.TileEntityFusionNeutronActivator;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
 
@@ -225,6 +229,7 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
         updateTemperatures();
 
 
+
         if (isBurning() != clientBurning || Math.abs(getLastPlasmaTemp() - clientTemp) > 1_000_000) {
             clientBurning = isBurning();
             clientTemp = getLastPlasmaTemp();
@@ -313,6 +318,17 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
         long fuelBurned = MathUtils.clampToLong(Mth.clamp((lastPlasmaTemperature - burnTemperature) * burnRatio, 0, fuelTank.getStored()));
         MekanismUtils.logMismatchedStackSize(fuelTank.shrinkStack(fuelBurned, Action.EXECUTE), fuelBurned);
         setPlasmaTemp(getPlasmaTemp() + MekanismGeneratorsConfig.generators.energyPerFusionFuel.get().multiply(fuelBurned).divide(plasmaHeatCapacity).doubleValue());
+
+        Level world = getLevel();
+
+        if(world !=null && MekanismUtils.canFunction(this)) {
+            BlockPos pos = this.getBlockPos().below(2);
+            BlockEntity entity = WorldUtils.getTileEntity(world, pos);
+            if(entity instanceof TileEntityFusionNeutronActivator tile) {
+                tile.setFuelBurned(fuelBurned);
+            }
+        }
+
         return fuelBurned;
     }
 
