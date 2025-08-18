@@ -17,6 +17,7 @@ import mekanism.api.heat.IHeatCapacitor;
 import mekanism.api.math.FloatingLong;
 import mekanism.api.math.MathUtils;
 import mekanism.common.capabilities.Capabilities;
+import mekanism.common.capabilities.chemical.variable.VariableCapacityChemicalTankBuilder;
 import mekanism.common.capabilities.energy.MachineEnergyContainer;
 import mekanism.common.capabilities.fluid.VariableCapacityFluidTank;
 import mekanism.common.capabilities.heat.CachedAmbientTemperature;
@@ -157,12 +158,14 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
             gasConfig.setDataType(DataType.INPUT_1, RelativeSide.LEFT);
             gasConfig.setDataType(DataType.INPUT_2, RelativeSide.RIGHT);
             gasConfig.setDataType(DataType.OUTPUT, RelativeSide.BOTTOM);
+            gasConfig.setEjecting(true);
         }
 
         ConfigInfo energyConfig = configComponent.getConfig(TransmissionType.ENERGY);
         if(energyConfig != null) {
             energyConfig.addSlotInfo(DataType.OUTPUT,new EnergySlotInfo(false,true,energyContainer));
             energyConfig.setDataType(DataType.OUTPUT,RelativeSide.values());
+            energyConfig.setEjecting(true);
         }
 
         ConfigInfo fluidConfig = configComponent.getConfig(TransmissionType.FLUID);
@@ -362,6 +365,7 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
 
         //Transfer from casing to water if necessary
         double caseWaterHeat = MekanismGeneratorsConfig.generators.fusionWaterHeatingRatio.get() * (lastCaseTemperature - biomeAmbientTemp);
+
         if (Math.abs(caseWaterHeat) > HeatAPI.EPSILON) {
             int waterToVaporize = (int) (HeatUtils.getSteamEnergyEfficiency() * caseWaterHeat / HeatUtils.getWaterThermalEnthalpy());
             waterToVaporize = Math.min(waterToVaporize, Math.min(waterTank.getFluidAmount(), MathUtils.clampToInt(steamTank.getNeeded())));
@@ -460,7 +464,8 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
         builder.addTank(deuteriumTank = ChemicalTankBuilder.GAS.input(MekanismGeneratorsConfig.generators.fusionFuelCapacity.get(), gas -> gas == GeneratorsGases.DEUTERIUM.getChemical(),listener));
         builder.addTank(tritiumTank = ChemicalTankBuilder.GAS.input(MekanismGeneratorsConfig.generators.fusionFuelCapacity.get(), gas -> gas == GeneratorsGases.TRITIUM.getChemical(),listener));
         builder.addTank(fuelTank = ChemicalTankBuilder.GAS.input(MekanismGeneratorsConfig.generators.fusionFuelCapacity.get(), gas -> gas == GeneratorsGases.FUSION_FUEL.getChemical(),createSaveAndComparator()));
-        builder.addTank(steamTank = ChemicalTankBuilder.GAS.output(maxSteam,listener));
+        builder.addTank(steamTank = VariableCapacityChemicalTankBuilder.GAS.output(this::getMaxSteam,gas ->gas == MekanismGases.STEAM.getChemical(),listener));
+
         return builder.build();
     }
 
