@@ -1,0 +1,28 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "aba",
+    "cde",
+    "aca"
+  ],
+  "key": {
+    "a": {
+      "item": "mekanismgenerators:fusion_reactor_frame"
+    },
+    "b": {
+      "item": "mekanismgenerators:fusion_reactor_controller"
+    },
+    "c":{
+      "item": "mekanismgenerators:reactor_glass"
+    },
+    "d": {
+      "item": "mekanismgenerators:fusion_reactor_port"
+    },
+    "e":{
+      "item": "mekanismgenerators:laser_focus_matrix"
+    }
+  },
+  "result": {
+    "item": "compactmekanismmachinesplus:compact_fusion_reactor"
+  }
+}
