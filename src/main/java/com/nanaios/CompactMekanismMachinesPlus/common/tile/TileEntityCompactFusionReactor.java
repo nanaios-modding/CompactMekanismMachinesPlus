@@ -52,6 +52,7 @@ import mekanism.common.util.HeatUtils;
 import mekanism.common.util.MekanismUtils;
 import mekanism.generators.common.config.MekanismGeneratorsConfig;
 import mekanism.generators.common.item.ItemHohlraum;
+import mekanism.generators.common.registries.GeneratorsFluids;
 import mekanism.generators.common.registries.GeneratorsGases;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -119,13 +120,13 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
     @ContainerSync(tags = FUEL_TAB)
     public IGasTank fuelTank;
 
-    private int maxWater;
-    private long maxSteam;
-
     @ContainerSync(tags = {FUEL_TAB, HEAT_TAB, STATS_TAB}, getter = "getInjectionRate", setter = "setInjectionRate")
     private int injectionRate = 2;
     @ContainerSync(tags = {FUEL_TAB, HEAT_TAB, STATS_TAB})
     private long lastBurned;
+
+    private int maxWater = injectionRate * MekanismGeneratorsConfig.generators.fusionWaterPerInjection.get();
+    private long maxSteam = injectionRate * MekanismGeneratorsConfig.generators.fusionSteamPerInjection.get();
 
     private InputInventorySlot reactorSlot;
 
@@ -498,12 +499,15 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
     @Override
     public void load(@NotNull CompoundTag nbtTags) {
         super.load(nbtTags);
-        plasmaTemperature = nbtTags.getDouble(NBTConstants.PLASMA_TEMP);
-        injectionRate = nbtTags.getInt(NBTConstants.INJECTION_RATE);
-        burning = nbtTags.getBoolean(NBTConstants.BURNING);
-
+        //温度の更新
+        setPlasmaTemp(nbtTags.getDouble(NBTConstants.PLASMA_TEMP));
         updateTemperatures();
 
+        //点火状態更新
+        setBurning(nbtTags.getBoolean(NBTConstants.BURNING));
+
+        //注入レート更新
+        setInjectionRate(nbtTags.getInt(NBTConstants.INJECTION_RATE));
     }
 
     @Override
@@ -549,4 +553,5 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
     public  IEnergyContainer getEnergyContainer() {
         return energyContainer;
     }
+
 }
