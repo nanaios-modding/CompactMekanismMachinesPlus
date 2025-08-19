@@ -1,13 +1,13 @@
 package com.nanaios.CompactMekanismMachinesPlus.common.tile;
 
 import com.nanaios.CompactMekanismMachinesPlus.common.registries.CompactPlusBlocks;
-import mekanism.api.Action;
-import mekanism.api.AutomationType;
-import mekanism.api.IContentsListener;
-import mekanism.api.RelativeSide;
+import mekanism.api.*;
+import mekanism.api.chemical.ChemicalTankBuilder;
+import mekanism.api.chemical.attribute.ChemicalAttributeValidator;
 import mekanism.api.chemical.gas.Gas;
 import mekanism.api.chemical.gas.GasStack;
 import mekanism.api.chemical.gas.IGasTank;
+import mekanism.api.chemical.gas.attribute.GasAttributes;
 import mekanism.api.energy.IEnergyContainer;
 import mekanism.api.functions.ConstantPredicates;
 import mekanism.api.math.FloatingLong;
@@ -30,7 +30,9 @@ import mekanism.common.tile.component.config.slot.EnergySlotInfo;
 import mekanism.common.tile.prefab.TileEntityConfigurableMachine;
 import mekanism.common.inventory.container.sync.dynamic.ContainerSync;
 import mekanism.common.util.MekanismUtils;
+import mekanism.common.util.NBTUtils;
 import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
 
@@ -161,6 +163,27 @@ public class TileEntityCompactSPS extends TileEntityConfigurableMachine {
         return (inputProcessed + progress) / MekanismConfig.general.spsInputPerAntimatter.get();
     }
 
+    //セーブ系統
+    @Override
+    public void load(CompoundTag nbtTags) {
+        super.load(nbtTags);
+        NBTUtils.setDoubleIfPresent(nbtTags, NBTConstants.PROGRESS, val -> progress = val);
+        NBTUtils.setIntIfPresent(nbtTags, NBTConstants.PROCESSED, val -> inputProcessed = val);
+        NBTUtils.setBooleanIfPresent(nbtTags, NBTConstants.COULD_OPERATE, val -> couldOperate = val);
+        NBTUtils.setFloatingLongIfPresent(nbtTags, NBTConstants.ENERGY_USAGE, val -> receivedEnergy = val);
+        NBTUtils.setDoubleIfPresent(nbtTags, NBTConstants.LAST_PROCESSED, val -> lastProcessed = val);
+    }
+
+    @Override
+    public void saveAdditional(CompoundTag nbtTags) {
+        super.saveAdditional(nbtTags);
+        nbtTags.putDouble(NBTConstants.PROGRESS, progress);
+        nbtTags.putInt(NBTConstants.PROCESSED, inputProcessed);
+        nbtTags.putBoolean(NBTConstants.COULD_OPERATE, couldOperate);
+        nbtTags.putString(NBTConstants.ENERGY_USAGE, receivedEnergy.toString());
+        nbtTags.putDouble(NBTConstants.LAST_PROCESSED, lastProcessed);
+    }
+
     //以下初期化
     @NotNull
     @Override
@@ -174,8 +197,20 @@ public class TileEntityCompactSPS extends TileEntityConfigurableMachine {
     @Override
     public IChemicalTankHolder<Gas, GasStack, IGasTank> getInitialGasTanks(IContentsListener listener) {
         ChemicalTankHelper<Gas, GasStack, IGasTank> builder = ChemicalTankHelper.forSideGasWithConfig(this::getDirection,this::getConfig);
-        builder.addTank(inputTank = VariableCapacityChemicalTankBuilder.GAS.create(this::getMaxInputGas, ConstantPredicates.alwaysTrueBi(),ConstantPredicates.notExternal(),gas -> gas == MekanismGases.POLONIUM.get(),listener));
+        builder.addTank(inputTank = ChemicalTankBuilder.GAS.create(
+                MekanismConfig.general.spsInputPerAntimatter.get() * 2L,
+                ChemicalTankBuilder.GAS.notExternal,
+                ChemicalTankBuilder.GAS.alwaysTrueBi,
+                gas -> gas == MekanismGases.POLONIUM.get(),
+                ChemicalAttributeValidator.ALWAYS_ALLOW,
+                listener
+        ));
+
         builder.addTank(outputTank = VariableCapacityChemicalTankBuilder.GAS.output(() -> MekanismConfig.general.spsOutputTankCapacity.get(), gas -> gas == MekanismGases.ANTIMATTER.get() ,listener));
         return builder.build();
+    }
+
+    public  IEnergyContainer getEnergyContainer() {
+        return energyContainer;
     }
 }
