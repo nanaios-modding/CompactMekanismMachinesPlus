@@ -185,7 +185,7 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
         }
 
         ejectorComponent = new TileComponentEjector(this, ()->Long.MAX_VALUE,()->Integer.MAX_VALUE,()-> FloatingLong.create(Long.MAX_VALUE));
-        ejectorComponent.setOutputData(configComponent, TransmissionType.ITEM,TransmissionType.GAS,TransmissionType.FLUID,TransmissionType.ENERGY);
+        ejectorComponent.setOutputData(configComponent,TransmissionType.GAS,TransmissionType.ENERGY);
         ejectorComponent.setCanEject(type -> MekanismUtils.canFunction(this));
     }
 
@@ -467,7 +467,6 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
     }
 
     public void setInjectionRateFromPacket(int rate) {
-        CompactMekanismMachinesPlus.LOGGER.info("set rate to {}.", rate);
         this.setInjectionRate(Mth.clamp(rate - (rate % 2), 0, FusionReactorMultiblockData.MAX_INJECTION));
         markForSave();
     }
