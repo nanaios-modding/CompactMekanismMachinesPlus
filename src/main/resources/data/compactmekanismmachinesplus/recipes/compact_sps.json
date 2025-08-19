@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "aba",
+    "cdc",
+    "aca"
+  ],
+  "key": {
+    "a": {
+      "item": "mekanism:sps_casing"
+    },
+    "b": {
+      "item": "mekanism:sps_port"
+    },
+    "c":{
+      "item": "mekanism:structural_glass"
+    },
+    "d": {
+      "item": "mekanism:supercharged_coil"
+    }
+  },
+  "result": {
+    "item": "compactmekanismmachinesplus:compact_sps"
+  }
+}
