@@ -1,5 +1,6 @@
 package com.nanaios.CompactMekanismMachinesPlus.common.tile;
 
+import com.nanaios.CompactMekanismMachinesPlus.common.CompactMekanismMachinesPlus;
 import com.nanaios.CompactMekanismMachinesPlus.common.registries.CompactPlusBlocks;
 import mekanism.api.*;
 import mekanism.api.chemical.ChemicalTankBuilder;
@@ -95,8 +96,11 @@ public class TileEntityCompactSPS extends TileEntityConfigurableMachine {
     protected void onUpdateServer() {
         super.onUpdateServer();
 
+        receivedEnergy = energyContainer.extract(energyContainer.getEnergy(), Action.EXECUTE, AutomationType.INTERNAL);
+
         double processed = 0;
         couldOperate = canOperate();
+
         if (couldOperate && !receivedEnergy.isZero()) {
             double lastProgress = progress;
             final int inputPerAntimatter = MekanismConfig.general.spsInputPerAntimatter.get();
@@ -122,6 +126,7 @@ public class TileEntityCompactSPS extends TileEntityConfigurableMachine {
                 //markDirty();
             }
         }
+
         lastReceivedEnergy = receivedEnergy;
         receivedEnergy = FloatingLong.ZERO;
         lastProcessed = processed;
