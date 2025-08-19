@@ -102,6 +102,7 @@ public class TileEntityCompactSPS extends TileEntityConfigurableMachine {
         couldOperate = canOperate();
 
         if (couldOperate && !receivedEnergy.isZero()) {
+            setActive(true);
             double lastProgress = progress;
             final int inputPerAntimatter = MekanismConfig.general.spsInputPerAntimatter.get();
             long inputNeeded = (inputPerAntimatter - inputProcessed) + inputPerAntimatter * (outputTank.getNeeded() - 1);
@@ -125,6 +126,8 @@ public class TileEntityCompactSPS extends TileEntityConfigurableMachine {
             if (lastProgress != progress) {
                 //markDirty();
             }
+        } else {
+            setActive(false);
         }
 
         lastReceivedEnergy = receivedEnergy;
