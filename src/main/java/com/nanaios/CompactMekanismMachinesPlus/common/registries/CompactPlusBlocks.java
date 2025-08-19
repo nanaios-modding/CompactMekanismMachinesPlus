@@ -22,6 +22,6 @@ public class CompactPlusBlocks {
 
     static {
         COMPACT_FUSION_REACTOR = BLOCKS.register("compact_fusion_reactor", () -> new BlockTile.BlockTileModel<>(CompactPlusBlockTypes.COMPACT_FUSION_REACTOR, properties -> properties.mapColor(MapColor.TERRACOTTA_BROWN)), ItemBlockMachine::new);
-        COMPACT_SPS = BLOCKS.register("compact_sps", () -> new BlockTile.BlockTileModel<>(CompactPlusBlockTypes.COMPACT_SPS, properties -> properties.mapColor(MapColor.TERRACOTTA_BROWN)), ItemBlockMachine::new);
+        COMPACT_SPS = BLOCKS.register("compact_sps", () -> new BlockTile.BlockTileModel<>(CompactPlusBlockTypes.COMPACT_SPS, properties -> properties.mapColor(MapColor.COLOR_LIGHT_GRAY)), ItemBlockMachine::new);
     }
 }
