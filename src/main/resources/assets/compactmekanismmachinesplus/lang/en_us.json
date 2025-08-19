@@ -1,5 +1,6 @@
 {
   "other.compactmekanismmachinesplus.mod_name": "CompactMekanismMachinesPlus",
   "block.compactmekanismmachinesplus.compact_fusion_reactor": "Compact Fusion Reactor",
+  "block.compactmekanismmachinesplus.compact_sps": "Compact Supercritical Phase Shifter",
   "reactor.compactmekanismmachinesplus.stats.active": "In operation"
 }

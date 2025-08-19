@@ -1,7 +1,7 @@
 {
-  "parent": "mekanism:block/machine",
+  "parent": "compactmekanismmachinesplus:block/machine",
   "textures": {
     "sides": "mekanism:block/sps_casing",
-    "front": "compactmekanismmachinesplus:block/reactor_controller"
+    "front": "compactmekanismmachinesplus:block/sps_front"
   }
 }
