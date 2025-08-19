@@ -24,6 +24,7 @@ public class CompactPlusBlockTypes {
                 .withSound(GeneratorsSounds.FUSION_REACTOR)
                 .build();
         COMPACT_SPS = Machine.MachineBuilder.createMachine(() -> CompactPlusTileEntityTypes.COMPACT_SPS, MekanismLang.DESCRIPTION_SPS_CASING)
+                .withGui(() -> CompactPlusContainerTypes.COMPACT_SPS,MekanismLang.SPS)
                 .withSound(MekanismSounds.SPS)
                 .withEnergyConfig(MekanismConfig.storage.spsPort)
                 .build();

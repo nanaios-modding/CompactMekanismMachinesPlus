@@ -153,7 +153,15 @@ public class TileEntityCompactSPS extends TileEntityConfigurableMachine {
         return MekanismConfig.general.spsInputPerAntimatter.get() * 2L;
     }
 
-    //初期化
+    public double getProcessRate() {
+        return Math.round((lastProcessed / MekanismConfig.general.spsInputPerAntimatter.get()) * 1_000) / 1_000D;
+    }
+
+    public double getScaledProgress() {
+        return (inputProcessed + progress) / MekanismConfig.general.spsInputPerAntimatter.get();
+    }
+
+    //以下初期化
     @NotNull
     @Override
     protected IEnergyContainerHolder getInitialEnergyContainers(IContentsListener listener) {

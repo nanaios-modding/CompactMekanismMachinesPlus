@@ -1,9 +1,6 @@
 package com.nanaios.CompactMekanismMachinesPlus.client;
 
-import com.nanaios.CompactMekanismMachinesPlus.client.gui.GuiFusionReactorController;
-import com.nanaios.CompactMekanismMachinesPlus.client.gui.GuiFusionReactorFuel;
-import com.nanaios.CompactMekanismMachinesPlus.client.gui.GuiFusionReactorHeat;
-import com.nanaios.CompactMekanismMachinesPlus.client.gui.GuiFusionReactorStats;
+import com.nanaios.CompactMekanismMachinesPlus.client.gui.*;
 import com.nanaios.CompactMekanismMachinesPlus.common.CompactMekanismMachinesPlus;
 import com.nanaios.CompactMekanismMachinesPlus.common.registries.CompactPlusContainerTypes;
 import mekanism.client.ClientRegistrationUtil;
@@ -25,6 +22,7 @@ public class CompactPlusClientRegistration {
             ClientRegistrationUtil.registerScreen(CompactPlusContainerTypes.COMPACT_FUSION_REACTOR_FUEL, GuiFusionReactorFuel::new);
             ClientRegistrationUtil.registerScreen(CompactPlusContainerTypes.COMPACT_FUSION_REACTOR_HEAT, GuiFusionReactorHeat::new);
             ClientRegistrationUtil.registerScreen(CompactPlusContainerTypes.COMPACT_FUSION_REACTOR_STATS, GuiFusionReactorStats::new);
+            ClientRegistrationUtil.registerScreen(CompactPlusContainerTypes.COMPACT_SPS, GuiSPS::new);
         });
     }
 }
