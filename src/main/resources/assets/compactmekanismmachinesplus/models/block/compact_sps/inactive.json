@@ -2,6 +2,6 @@
   "parent": "mekanism:block/machine",
   "textures": {
     "sides": "mekanism:block/sps_casing",
-    "front": "mekanismgenerators:block/reactor_controller"
+    "front": "compactmekanismmachinesplus:block/reactor_controller"
   }
 }
