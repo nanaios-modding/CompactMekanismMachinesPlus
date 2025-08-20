@@ -36,6 +36,8 @@ public class CompactPlusBlockTypes {
                 .withSupportedUpgrades(EnumSet.of(Upgrade.MUFFLING))
                 .build();
         COMPACT_THERMOELECTRIC_BOILER = Machine.MachineBuilder.createMachine(() -> CompactPlusTileEntityTypes.COMPACT_THERMOELECTRIC_BOILER,MekanismLang.DESCRIPTION_BOILER_CASING)
+                .withGui(() -> CompactPlusContainerTypes.COMPACT_THERMOELECTRIC_BOILER,MekanismLang.BOILER)
+                .withSupportedUpgrades(EnumSet.of(Upgrade.MUFFLING))
                 .build();
     }
 }

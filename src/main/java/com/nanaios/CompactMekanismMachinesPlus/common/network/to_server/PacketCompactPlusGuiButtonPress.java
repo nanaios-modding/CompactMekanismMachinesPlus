@@ -1,6 +1,9 @@
 package com.nanaios.CompactMekanismMachinesPlus.common.network.to_server;
 
 import com.nanaios.CompactMekanismMachinesPlus.common.registries.CompactPlusContainerTypes;
+import com.nanaios.CompactMekanismMachinesPlus.common.tile.TileEntityCompactFusionReactor;
+import com.nanaios.CompactMekanismMachinesPlus.common.tile.TileEntityCompactThermoelectricBoiler;
+import mekanism.common.MekanismLang;
 import mekanism.common.network.IMekanismPacket;
 import mekanism.common.tile.base.TileEntityMekanism;
 import mekanism.common.util.WorldUtils;
@@ -62,8 +65,15 @@ public class PacketCompactPlusGuiButtonPress implements IMekanismPacket {
     public enum ClickedCompactPlusTileButton {
         TAB_HEAT((tile, extra) -> CompactPlusContainerTypes.COMPACT_FUSION_REACTOR_HEAT.getProvider(GeneratorsLang.FUSION_REACTOR, tile)),
         TAB_FUEL((tile, extra) -> CompactPlusContainerTypes.COMPACT_FUSION_REACTOR_FUEL.getProvider(GeneratorsLang.FUSION_REACTOR, tile)),
-        TAB_STATS((tile, extra) -> CompactPlusContainerTypes.COMPACT_FUSION_REACTOR_STATS.getProvider(GeneratorsLang.FUSION_REACTOR, tile));
-
+        TAB_STATS((tile, extra) -> {
+            if(tile instanceof TileEntityCompactFusionReactor) {
+                CompactPlusContainerTypes.COMPACT_FUSION_REACTOR_STATS.getProvider(GeneratorsLang.FUSION_REACTOR, tile);
+            } else if(tile instanceof TileEntityCompactThermoelectricBoiler) {
+                return CompactPlusContainerTypes.COMPACT_THERMOELECTRIC_BOILER.getProvider(MekanismLang.BOILER, tile);
+            }
+            return null;
+        }),
+        TAB_MAIN((tile, extra) -> CompactPlusContainerTypes.COMPACT_THERMOELECTRIC_BOILER.getProvider(MekanismLang.BOILER, tile));
         private final BiFunction<TileEntityMekanism, Integer, MenuProvider> providerFromTile;
 
         ClickedCompactPlusTileButton(BiFunction<TileEntityMekanism, Integer, MenuProvider> providerFromTile) {
