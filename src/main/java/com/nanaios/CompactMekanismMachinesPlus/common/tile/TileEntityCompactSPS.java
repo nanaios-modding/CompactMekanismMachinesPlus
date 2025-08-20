@@ -1,6 +1,5 @@
 package com.nanaios.CompactMekanismMachinesPlus.common.tile;
 
-import com.nanaios.CompactMekanismMachinesPlus.common.CompactMekanismMachinesPlus;
 import com.nanaios.CompactMekanismMachinesPlus.common.registries.CompactPlusBlocks;
 import mekanism.api.*;
 import mekanism.api.chemical.ChemicalTankBuilder;
@@ -8,9 +7,7 @@ import mekanism.api.chemical.attribute.ChemicalAttributeValidator;
 import mekanism.api.chemical.gas.Gas;
 import mekanism.api.chemical.gas.GasStack;
 import mekanism.api.chemical.gas.IGasTank;
-import mekanism.api.chemical.gas.attribute.GasAttributes;
 import mekanism.api.energy.IEnergyContainer;
-import mekanism.api.functions.ConstantPredicates;
 import mekanism.api.math.FloatingLong;
 import mekanism.api.math.MathUtils;
 import mekanism.common.capabilities.chemical.variable.VariableCapacityChemicalTankBuilder;
@@ -173,7 +170,7 @@ public class TileEntityCompactSPS extends TileEntityConfigurableMachine {
 
     //セーブ系統
     @Override
-    public void load(CompoundTag nbtTags) {
+    public void load(@NotNull CompoundTag nbtTags) {
         super.load(nbtTags);
         NBTUtils.setDoubleIfPresent(nbtTags, NBTConstants.PROGRESS, val -> progress = val);
         NBTUtils.setIntIfPresent(nbtTags, NBTConstants.PROCESSED, val -> inputProcessed = val);
@@ -183,7 +180,7 @@ public class TileEntityCompactSPS extends TileEntityConfigurableMachine {
     }
 
     @Override
-    public void saveAdditional(CompoundTag nbtTags) {
+    public void saveAdditional(@NotNull CompoundTag nbtTags) {
         super.saveAdditional(nbtTags);
         nbtTags.putDouble(NBTConstants.PROGRESS, progress);
         nbtTags.putInt(NBTConstants.PROCESSED, inputProcessed);
