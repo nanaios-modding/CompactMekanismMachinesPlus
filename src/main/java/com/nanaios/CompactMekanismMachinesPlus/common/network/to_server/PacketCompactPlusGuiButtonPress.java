@@ -1,5 +1,6 @@
 package com.nanaios.CompactMekanismMachinesPlus.common.network.to_server;
 
+import com.nanaios.CompactMekanismMachinesPlus.common.CompactMekanismMachinesPlus;
 import com.nanaios.CompactMekanismMachinesPlus.common.registries.CompactPlusContainerTypes;
 import com.nanaios.CompactMekanismMachinesPlus.common.tile.TileEntityCompactFusionReactor;
 import com.nanaios.CompactMekanismMachinesPlus.common.tile.TileEntityCompactThermoelectricBoiler;
@@ -67,10 +68,13 @@ public class PacketCompactPlusGuiButtonPress implements IMekanismPacket {
         TAB_FUEL((tile, extra) -> CompactPlusContainerTypes.COMPACT_FUSION_REACTOR_FUEL.getProvider(GeneratorsLang.FUSION_REACTOR, tile)),
         TAB_STATS((tile, extra) -> {
             if(tile instanceof TileEntityCompactFusionReactor) {
-                CompactPlusContainerTypes.COMPACT_FUSION_REACTOR_STATS.getProvider(GeneratorsLang.FUSION_REACTOR, tile);
+                CompactMekanismMachinesPlus.LOGGER.info("tile instanceof fusion!");
+                return CompactPlusContainerTypes.COMPACT_FUSION_REACTOR_STATS.getProvider(GeneratorsLang.FUSION_REACTOR, tile);
             } else if(tile instanceof TileEntityCompactThermoelectricBoiler) {
-                return CompactPlusContainerTypes.COMPACT_THERMOELECTRIC_BOILER.getProvider(MekanismLang.BOILER, tile);
+                CompactMekanismMachinesPlus.LOGGER.info("tile instanceof boiler!");
+                return CompactPlusContainerTypes.BOILER_STATS.getProvider(MekanismLang.BOILER, tile);
             }
+            CompactMekanismMachinesPlus.LOGGER.info("tile not instanceof");
             return null;
         }),
         TAB_MAIN((tile, extra) -> CompactPlusContainerTypes.COMPACT_THERMOELECTRIC_BOILER.getProvider(MekanismLang.BOILER, tile));

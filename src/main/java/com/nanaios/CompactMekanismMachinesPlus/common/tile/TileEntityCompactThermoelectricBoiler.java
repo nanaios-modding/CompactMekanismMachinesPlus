@@ -1,32 +1,50 @@
 package com.nanaios.CompactMekanismMachinesPlus.common.tile;
 
 import com.nanaios.CompactMekanismMachinesPlus.common.registries.CompactPlusBlocks;
-import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
-import it.unimi.dsi.fastutil.objects.Object2BooleanOpenHashMap;
-import mekanism.api.Action;
-import mekanism.api.AutomationType;
+import mekanism.common.content.boiler.BoilerMultiblockData;
+import mekanism.api.*;
+import mekanism.api.chemical.ChemicalTankBuilder;
+import mekanism.api.chemical.attribute.ChemicalAttributeValidator;
+import mekanism.api.chemical.gas.Gas;
 import mekanism.api.chemical.gas.GasStack;
 import mekanism.api.chemical.gas.IGasTank;
 import mekanism.api.chemical.gas.attribute.GasAttributes.CooledCoolant;
 import mekanism.api.chemical.gas.attribute.GasAttributes.HeatedCoolant;
+import mekanism.api.heat.HeatAPI;
 import mekanism.api.math.FloatingLong;
 import mekanism.api.math.MathUtils;
+import mekanism.common.capabilities.chemical.variable.VariableCapacityChemicalTankBuilder;
 import mekanism.common.capabilities.fluid.VariableCapacityFluidTank;
+import mekanism.common.capabilities.heat.CachedAmbientTemperature;
 import mekanism.common.capabilities.heat.VariableHeatCapacitor;
+import mekanism.common.capabilities.holder.chemical.ChemicalTankHelper;
+import mekanism.common.capabilities.holder.chemical.IChemicalTankHolder;
+import mekanism.common.capabilities.holder.fluid.FluidTankHelper;
+import mekanism.common.capabilities.holder.fluid.IFluidTankHolder;
+import mekanism.common.capabilities.holder.heat.HeatCapacitorHelper;
+import mekanism.common.capabilities.holder.heat.IHeatCapacitorHolder;
 import mekanism.common.config.MekanismConfig;
 import mekanism.common.inventory.container.sync.dynamic.ContainerSync;
+import mekanism.common.lib.multiblock.IValveHandler;
 import mekanism.common.lib.transmitter.TransmissionType;
 import mekanism.common.registries.MekanismGases;
+import mekanism.common.tags.MekanismTags;
 import mekanism.common.tile.component.TileComponentConfig;
 import mekanism.common.tile.component.TileComponentEjector;
 import mekanism.common.tile.component.config.ConfigInfo;
+import mekanism.common.tile.component.config.DataType;
+import mekanism.common.tile.component.config.slot.ChemicalSlotInfo;
+import mekanism.common.tile.component.config.slot.FluidSlotInfo;
 import mekanism.common.tile.prefab.TileEntityConfigurableMachine;
 import mekanism.common.util.HeatUtils;
 import mekanism.common.util.MekanismUtils;
+import mekanism.common.util.NBTUtils;
 import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtUtils;
 import net.minecraft.world.level.block.state.BlockState;
-
-import java.util.UUID;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class TileEntityCompactThermoelectricBoiler extends TileEntityConfigurableMachine {
     //public static final Object2BooleanMap<UUID> hotMap = new Object2BooleanOpenHashMap<>();
@@ -84,16 +102,29 @@ public class TileEntityCompactThermoelectricBoiler extends TileEntityConfigurabl
     public TileEntityCompactThermoelectricBoiler(BlockPos pos, BlockState state) {
         super(CompactPlusBlocks.COMPACT_THERMOELECTRIC_BOILER, pos, state);
 
+        biomeAmbientTemp = HeatAPI.getAmbientTemp(this.getLevel(), this.getTilePos());
+
         configComponent = new TileComponentConfig(this,TransmissionType.GAS,TransmissionType.FLUID,TransmissionType.HEAT);
 
         ConfigInfo gasConfig = configComponent.getConfig(TransmissionType.GAS);
         if(gasConfig != null) {
+            gasConfig.addSlotInfo(DataType.INPUT,new ChemicalSlotInfo.GasSlotInfo(true,false,superheatedCoolantTank));
+            gasConfig.addSlotInfo(DataType.OUTPUT_1,new ChemicalSlotInfo.GasSlotInfo(false,true,cooledCoolantTank));
+            gasConfig.addSlotInfo(DataType.OUTPUT_2,new ChemicalSlotInfo.GasSlotInfo(false,true,steamTank));
 
+            gasConfig.setDataType(DataType.INPUT, RelativeSide.LEFT);
+            gasConfig.setDataType(DataType.OUTPUT_1, RelativeSide.TOP);
+            gasConfig.setDataType(DataType.OUTPUT_2, RelativeSide.RIGHT);
+
+            gasConfig.setEjecting(true);
         }
 
         ConfigInfo fluidConfig =configComponent.getConfig(TransmissionType.FLUID);
         if(fluidConfig != null) {
+            fluidConfig.addSlotInfo(DataType.INPUT,new FluidSlotInfo(true,false,waterTank));
+            fluidConfig.setDataType(DataType.INPUT,RelativeSide.BACK);
 
+            fluidConfig.setCanEject(false);
         }
 
         ConfigInfo heatConfig = configComponent.getConfig(TransmissionType.HEAT);
@@ -192,5 +223,71 @@ public class TileEntityCompactThermoelectricBoiler extends TileEntityConfigurabl
     public long getBoilCapacity() {
         double boilCapacity = MekanismConfig.general.superheatingHeatTransfer.get() * superheatingElements / HeatUtils.getWaterThermalEnthalpy();
         return MathUtils.clampToLong(boilCapacity * HeatUtils.getSteamEnergyEfficiency());
+    }
+
+    //以下保存系統
+    @Override
+    public void load(@NotNull CompoundTag tag) {
+        super.load(tag);
+        NBTUtils.setFloatIfPresent(tag, NBTConstants.SCALE, scale -> prevWaterScale = scale);
+        NBTUtils.setFloatIfPresent(tag, NBTConstants.SCALE_ALT, scale -> prevSteamScale = scale);
+        NBTUtils.setIntIfPresent(tag, NBTConstants.VOLUME, this::setWaterVolume);
+        NBTUtils.setIntIfPresent(tag, NBTConstants.LOWER_VOLUME, this::setSteamVolume);
+        NBTUtils.setFluidStackIfPresent(tag, NBTConstants.FLUID_STORED, value -> waterTank.setStack(value));
+        NBTUtils.setGasStackIfPresent(tag, NBTConstants.GAS_STORED, value -> steamTank.setStack(value));
+        NBTUtils.setBlockPosIfPresent(tag, NBTConstants.RENDER_Y, value -> upperRenderLocation = value);
+        //readValves(tag);
+    }
+
+    @Override
+    public void saveAdditional(@NotNull CompoundTag tag) {
+        super.saveAdditional(tag);
+        tag.putFloat(NBTConstants.SCALE, prevWaterScale);
+        tag.putFloat(NBTConstants.SCALE_ALT, prevSteamScale);
+        tag.putInt(NBTConstants.VOLUME, getWaterVolume());
+        tag.putInt(NBTConstants.LOWER_VOLUME, getSteamVolume());
+        tag.put(NBTConstants.FLUID_STORED, waterTank.getFluid().writeToNBT(new CompoundTag()));
+        tag.put(NBTConstants.GAS_STORED, steamTank.getStack().write(new CompoundTag()));
+        tag.put(NBTConstants.RENDER_Y, NbtUtils.writeBlockPos(upperRenderLocation));
+        //writeValves(tag);
+    }
+
+    //以下初期化系統
+    @Override
+    public @Nullable IChemicalTankHolder<Gas, GasStack, IGasTank> getInitialGasTanks(IContentsListener listener) {
+        ChemicalTankHelper<Gas, GasStack, IGasTank> builder = ChemicalTankHelper.forSideGasWithConfig(this::getDirection,this::getConfig);
+        builder.addTank(superheatedCoolantTank = VariableCapacityChemicalTankBuilder.GAS.create(
+                () -> superheatedCoolantCapacity,
+                ChemicalTankBuilder.GAS.notExternal,
+                ChemicalTankBuilder.GAS.alwaysTrueBi,
+                gas -> gas.has(HeatedCoolant.class),
+                ChemicalAttributeValidator.ALWAYS_ALLOW,
+                listener
+        ));
+        builder.addTank(cooledCoolantTank = VariableCapacityChemicalTankBuilder.GAS.output(
+                () -> cooledCoolantCapacity,
+                gas -> gas.has(CooledCoolant.class),
+                listener
+        ));
+        builder.addTank(steamTank = VariableCapacityChemicalTankBuilder.GAS.output(
+                () -> steamTankCapacity,
+                gas -> gas == MekanismGases.STEAM.getChemical(),
+                listener
+        ));
+        return builder.build();
+    }
+
+    @NotNull
+    @Override
+    public IFluidTankHolder getInitialFluidTanks(IContentsListener listener){
+        FluidTankHelper builder = FluidTankHelper.forSideWithConfig(this::getDirection,this::getConfig);
+        builder.addTank(waterTank = VariableCapacityFluidTank.input(() -> waterTankCapacity, fluid -> MekanismTags.Fluids.WATER_LOOKUP.contains(fluid.getFluid()), listener));
+        return builder.build();
+    }
+
+    public IHeatCapacitorHolder getInitialHeatCapacitors(IContentsListener listener, CachedAmbientTemperature ambientTemperature){
+        HeatCapacitorHelper builder = HeatCapacitorHelper.forSide(this::getDirection);
+        builder.addCapacitor(heatCapacitor = VariableHeatCapacitor.create(CASING_HEAT_CAPACITY, () -> CASING_INVERSE_CONDUCTION_COEFFICIENT, () -> CASING_INVERSE_INSULATION_COEFFICIENT, () -> biomeAmbientTemp, listener));
+        return builder.build();
     }
 }
