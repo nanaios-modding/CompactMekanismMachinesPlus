@@ -1,5 +1,7 @@
 package com.nanaios.CompactMekanismMachinesPlus.common.tile;
 
+import com.nanaios.CompactMekanismMachinesPlus.common.CompactMekanismMachinesPlus;
+import com.nanaios.CompactMekanismMachinesPlus.common.CompactPlusNBTConstants;
 import com.nanaios.CompactMekanismMachinesPlus.common.registries.CompactPlusBlocks;
 import mekanism.common.content.boiler.BoilerMultiblockData;
 import mekanism.api.*;
@@ -46,6 +48,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import mekanism.common.content.boiler.BoilerValidator;
+
 public class TileEntityCompactThermoelectricBoiler extends TileEntityConfigurableMachine {
     //public static final Object2BooleanMap<UUID> hotMap = new Object2BooleanOpenHashMap<>();
 
@@ -54,6 +58,11 @@ public class TileEntityCompactThermoelectricBoiler extends TileEntityConfigurabl
     private static final double CASING_INVERSE_CONDUCTION_COEFFICIENT = 1;
 
     private static final double COOLANT_COOLING_EFFICIENCY = 0.4;
+
+    //ボイラーの底面積。18 * 18
+    public static final int BOILER_BASE_AREA = 324;
+    //
+    public static final int BOILER_HEIGHT = 18;
 
     @ContainerSync
     public IGasTank superheatedCoolantTank;
@@ -82,7 +91,10 @@ public class TileEntityCompactThermoelectricBoiler extends TileEntityConfigurabl
     public int lastMaxBoil;
 
     @ContainerSync
-    public int superheatingElements;
+    public int superheatingElements = 256;
+
+    @ContainerSync
+    public int dispersersY = 16;
 
     @ContainerSync(setter = "setWaterVolume")
     private int waterVolume;
@@ -93,14 +105,15 @@ public class TileEntityCompactThermoelectricBoiler extends TileEntityConfigurabl
     private int waterTankCapacity;
     private long superheatedCoolantCapacity, steamTankCapacity, cooledCoolantCapacity;
 
-    public BlockPos upperRenderLocation;
-
     public float prevWaterScale;
     public float prevSteamScale;
 
 
     public TileEntityCompactThermoelectricBoiler(BlockPos pos, BlockState state) {
         super(CompactPlusBlocks.COMPACT_THERMOELECTRIC_BOILER, pos, state);
+
+        setWaterVolume((BOILER_BASE_AREA * (dispersersY - 1)  - superheatingElements));
+        setSteamVolume(BOILER_BASE_AREA * (BOILER_HEIGHT - dispersersY));
 
         biomeAmbientTemp = HeatAPI.getAmbientTemp(this.getLevel(), this.getTilePos());
 
@@ -196,20 +209,12 @@ public class TileEntityCompactThermoelectricBoiler extends TileEntityConfigurabl
         return Math.min(heatAvailable, MekanismConfig.general.superheatingHeatTransfer.get() * superheatingElements);
     }
 
-    public int getWaterVolume() {
-        return waterVolume;
-    }
-
     public void setWaterVolume(int volume) {
         if (waterVolume != volume) {
             waterVolume = volume;
             waterTankCapacity = volume * MekanismConfig.general.boilerWaterPerTank.get();
             superheatedCoolantCapacity = volume * MekanismConfig.general.boilerHeatedCoolantPerTank.get();
         }
-    }
-
-    public int getSteamVolume() {
-        return steamVolume;
     }
 
     public void setSteamVolume(int volume) {
@@ -225,32 +230,58 @@ public class TileEntityCompactThermoelectricBoiler extends TileEntityConfigurabl
         return MathUtils.clampToLong(boilCapacity * HeatUtils.getSteamEnergyEfficiency());
     }
 
+    public void setSuperHeatingElements(int count) {
+        this.superheatingElements = count;
+
+        int waterVolume = (BOILER_BASE_AREA * (dispersersY - 1)  - superheatingElements);
+        int steamVolume = BOILER_BASE_AREA * (BOILER_HEIGHT - dispersersY);
+
+        setWaterVolume(waterVolume);
+        setSteamVolume(steamVolume);
+
+    }
+    public void setDispersersY(int y) {
+        this.dispersersY = y;
+    }
+
     //以下保存系統
     @Override
     public void load(@NotNull CompoundTag tag) {
+
+        CompactMekanismMachinesPlus.LOGGER.info("loading of Boiler");
+
         super.load(tag);
+        NBTUtils.setIntIfPresent(tag,CompactPlusNBTConstants.DISPERSERS_Y,this::setDispersersY);
+        NBTUtils.setIntIfPresent(tag,CompactPlusNBTConstants.SUPER_HEATING_ELEMENTS,this::setSuperHeatingElements);
         NBTUtils.setFloatIfPresent(tag, NBTConstants.SCALE, scale -> prevWaterScale = scale);
         NBTUtils.setFloatIfPresent(tag, NBTConstants.SCALE_ALT, scale -> prevSteamScale = scale);
-        NBTUtils.setIntIfPresent(tag, NBTConstants.VOLUME, this::setWaterVolume);
-        NBTUtils.setIntIfPresent(tag, NBTConstants.LOWER_VOLUME, this::setSteamVolume);
-        NBTUtils.setFluidStackIfPresent(tag, NBTConstants.FLUID_STORED, value -> waterTank.setStack(value));
-        NBTUtils.setGasStackIfPresent(tag, NBTConstants.GAS_STORED, value -> steamTank.setStack(value));
-        NBTUtils.setBlockPosIfPresent(tag, NBTConstants.RENDER_Y, value -> upperRenderLocation = value);
+
         //readValves(tag);
     }
 
     @Override
     public void saveAdditional(@NotNull CompoundTag tag) {
+
+        CompactMekanismMachinesPlus.LOGGER.info("saving of Boiler");
         super.saveAdditional(tag);
+        tag.putInt(CompactPlusNBTConstants.DISPERSERS_Y,dispersersY);
+        tag.putInt(CompactPlusNBTConstants.SUPER_HEATING_ELEMENTS,superheatingElements);
+
         tag.putFloat(NBTConstants.SCALE, prevWaterScale);
         tag.putFloat(NBTConstants.SCALE_ALT, prevSteamScale);
-        tag.putInt(NBTConstants.VOLUME, getWaterVolume());
-        tag.putInt(NBTConstants.LOWER_VOLUME, getSteamVolume());
-        tag.put(NBTConstants.FLUID_STORED, waterTank.getFluid().writeToNBT(new CompoundTag()));
-        tag.put(NBTConstants.GAS_STORED, steamTank.getStack().write(new CompoundTag()));
-        tag.put(NBTConstants.RENDER_Y, NbtUtils.writeBlockPos(upperRenderLocation));
         //writeValves(tag);
     }
+
+    //以下パケット系統
+    public void setSuperHeatingElementsFromPacket(int count) {
+        setSuperHeatingElements(count);
+        markForSave();
+    }
+    public void setDispersersYFromPacket(int y) {
+        setDispersersY(y);
+        markForSave();
+    }
+
 
     //以下初期化系統
     @Override
