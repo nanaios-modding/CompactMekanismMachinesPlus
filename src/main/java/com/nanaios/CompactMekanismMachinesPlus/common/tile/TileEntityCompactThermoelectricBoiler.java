@@ -3,7 +3,6 @@ package com.nanaios.CompactMekanismMachinesPlus.common.tile;
 import com.nanaios.CompactMekanismMachinesPlus.common.CompactMekanismMachinesPlus;
 import com.nanaios.CompactMekanismMachinesPlus.common.CompactPlusNBTConstants;
 import com.nanaios.CompactMekanismMachinesPlus.common.registries.CompactPlusBlocks;
-import mekanism.common.content.boiler.BoilerMultiblockData;
 import mekanism.api.*;
 import mekanism.api.chemical.ChemicalTankBuilder;
 import mekanism.api.chemical.attribute.ChemicalAttributeValidator;
@@ -13,6 +12,7 @@ import mekanism.api.chemical.gas.IGasTank;
 import mekanism.api.chemical.gas.attribute.GasAttributes.CooledCoolant;
 import mekanism.api.chemical.gas.attribute.GasAttributes.HeatedCoolant;
 import mekanism.api.heat.HeatAPI;
+import mekanism.api.heat.IHeatCapacitor;
 import mekanism.api.math.FloatingLong;
 import mekanism.api.math.MathUtils;
 import mekanism.common.capabilities.chemical.variable.VariableCapacityChemicalTankBuilder;
@@ -27,7 +27,6 @@ import mekanism.common.capabilities.holder.heat.HeatCapacitorHelper;
 import mekanism.common.capabilities.holder.heat.IHeatCapacitorHolder;
 import mekanism.common.config.MekanismConfig;
 import mekanism.common.inventory.container.sync.dynamic.ContainerSync;
-import mekanism.common.lib.multiblock.IValveHandler;
 import mekanism.common.lib.transmitter.TransmissionType;
 import mekanism.common.registries.MekanismGases;
 import mekanism.common.tags.MekanismTags;
@@ -37,18 +36,18 @@ import mekanism.common.tile.component.config.ConfigInfo;
 import mekanism.common.tile.component.config.DataType;
 import mekanism.common.tile.component.config.slot.ChemicalSlotInfo;
 import mekanism.common.tile.component.config.slot.FluidSlotInfo;
+import mekanism.common.tile.component.config.slot.HeatSlotInfo;
 import mekanism.common.tile.prefab.TileEntityConfigurableMachine;
 import mekanism.common.util.HeatUtils;
 import mekanism.common.util.MekanismUtils;
 import mekanism.common.util.NBTUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.NbtUtils;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import mekanism.common.content.boiler.BoilerValidator;
+import java.util.List;
 
 public class TileEntityCompactThermoelectricBoiler extends TileEntityConfigurableMachine {
     //public static final Object2BooleanMap<UUID> hotMap = new Object2BooleanOpenHashMap<>();
@@ -79,7 +78,7 @@ public class TileEntityCompactThermoelectricBoiler extends TileEntityConfigurabl
     @ContainerSync
     public VariableHeatCapacitor heatCapacitor;
 
-    private double biomeAmbientTemp;
+    private final double biomeAmbientTemp;
 
     @ContainerSync
     public double lastEnvironmentLoss;
@@ -91,10 +90,13 @@ public class TileEntityCompactThermoelectricBoiler extends TileEntityConfigurabl
     public int lastMaxBoil;
 
     @ContainerSync
-    public int superheatingElements = 256;
+    public int superHeatingElements;
 
     @ContainerSync
-    public int dispersersY = 16;
+    public int dispersersY;
+
+    @ContainerSync
+    public int maxSuperHeatingElements;
 
     @ContainerSync(setter = "setWaterVolume")
     private int waterVolume;
@@ -112,7 +114,9 @@ public class TileEntityCompactThermoelectricBoiler extends TileEntityConfigurabl
     public TileEntityCompactThermoelectricBoiler(BlockPos pos, BlockState state) {
         super(CompactPlusBlocks.COMPACT_THERMOELECTRIC_BOILER, pos, state);
 
-        setWaterVolume((BOILER_BASE_AREA * (dispersersY - 1)  - superheatingElements));
+        setDispersersY(16);
+        setSuperHeatingElements(256);
+        setWaterVolume((BOILER_BASE_AREA * (dispersersY - 1)  - superHeatingElements));
         setSteamVolume(BOILER_BASE_AREA * (BOILER_HEIGHT - dispersersY));
 
         biomeAmbientTemp = HeatAPI.getAmbientTemp(this.getLevel(), this.getTilePos());
@@ -142,7 +146,10 @@ public class TileEntityCompactThermoelectricBoiler extends TileEntityConfigurabl
 
         ConfigInfo heatConfig = configComponent.getConfig(TransmissionType.HEAT);
         if(heatConfig != null) {
+            heatConfig.addSlotInfo(DataType.INPUT,new HeatSlotInfo(true,false, List.of(heatCapacitor)));
+            heatConfig.setDataType(DataType.INPUT,RelativeSide.values());
 
+            heatConfig.setCanEject(false);
         }
 
         ejectorComponent = new TileComponentEjector(this,() -> Long.MAX_VALUE,() -> Integer.MAX_VALUE, () -> FloatingLong.MAX_VALUE);
@@ -153,8 +160,6 @@ public class TileEntityCompactThermoelectricBoiler extends TileEntityConfigurabl
     @Override
     protected void onUpdateServer() {
         super.onUpdateServer();
-        //hotMap.put(inventoryID, getTotalTemperature() >= HeatUtils.BASE_BOIL_TEMP - 0.01);
-        // external heat dissipation
         lastEnvironmentLoss = simulateEnvironment();
         // update temperature
         updateHeatCapacitors(null);
@@ -206,7 +211,7 @@ public class TileEntityCompactThermoelectricBoiler extends TileEntityConfigurabl
 
     private double getHeatAvailable() {
         double heatAvailable = (heatCapacitor.getTemperature() - HeatUtils.BASE_BOIL_TEMP) * (heatCapacitor.getHeatCapacity() * MekanismConfig.general.boilerWaterConductivity.get());
-        return Math.min(heatAvailable, MekanismConfig.general.superheatingHeatTransfer.get() * superheatingElements);
+        return Math.min(heatAvailable, MekanismConfig.general.superheatingHeatTransfer.get() * superHeatingElements);
     }
 
     public void setWaterVolume(int volume) {
@@ -226,14 +231,18 @@ public class TileEntityCompactThermoelectricBoiler extends TileEntityConfigurabl
     }
 
     public long getBoilCapacity() {
-        double boilCapacity = MekanismConfig.general.superheatingHeatTransfer.get() * superheatingElements / HeatUtils.getWaterThermalEnthalpy();
+        double boilCapacity = MekanismConfig.general.superheatingHeatTransfer.get() * superHeatingElements / HeatUtils.getWaterThermalEnthalpy();
         return MathUtils.clampToLong(boilCapacity * HeatUtils.getSteamEnergyEfficiency());
     }
 
     public void setSuperHeatingElements(int count) {
-        this.superheatingElements = count;
+        if(count > maxSuperHeatingElements || superHeatingElements > maxSuperHeatingElements ) {
+            superHeatingElements = maxSuperHeatingElements;
+        } else {
+            superHeatingElements = count;
+        }
 
-        int waterVolume = (BOILER_BASE_AREA * (dispersersY - 1)  - superheatingElements);
+        int waterVolume = (BOILER_BASE_AREA * (dispersersY - 1)  - superHeatingElements);
         int steamVolume = BOILER_BASE_AREA * (BOILER_HEIGHT - dispersersY);
 
         setWaterVolume(waterVolume);
@@ -241,14 +250,13 @@ public class TileEntityCompactThermoelectricBoiler extends TileEntityConfigurabl
 
     }
     public void setDispersersY(int y) {
-        this.dispersersY = y;
+        dispersersY = y;
+        maxSuperHeatingElements = 256 * (dispersersY - 2);
     }
 
     //以下保存系統
     @Override
     public void load(@NotNull CompoundTag tag) {
-
-        CompactMekanismMachinesPlus.LOGGER.info("loading of Boiler");
 
         super.load(tag);
         NBTUtils.setIntIfPresent(tag,CompactPlusNBTConstants.DISPERSERS_Y,this::setDispersersY);
@@ -261,11 +269,9 @@ public class TileEntityCompactThermoelectricBoiler extends TileEntityConfigurabl
 
     @Override
     public void saveAdditional(@NotNull CompoundTag tag) {
-
-        CompactMekanismMachinesPlus.LOGGER.info("saving of Boiler");
         super.saveAdditional(tag);
         tag.putInt(CompactPlusNBTConstants.DISPERSERS_Y,dispersersY);
-        tag.putInt(CompactPlusNBTConstants.SUPER_HEATING_ELEMENTS,superheatingElements);
+        tag.putInt(CompactPlusNBTConstants.SUPER_HEATING_ELEMENTS, superHeatingElements);
 
         tag.putFloat(NBTConstants.SCALE, prevWaterScale);
         tag.putFloat(NBTConstants.SCALE_ALT, prevSteamScale);

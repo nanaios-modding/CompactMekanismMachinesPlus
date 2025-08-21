@@ -15,6 +15,8 @@ import mekanism.client.gui.element.gauge.GaugeType;
 import mekanism.client.gui.element.gauge.GuiFluidGauge;
 import mekanism.client.gui.element.gauge.GuiGasGauge;
 import mekanism.client.gui.element.tab.GuiHeatTab;
+import mekanism.client.gui.element.tab.window.GuiSideConfigurationTab;
+import mekanism.client.gui.element.tab.window.GuiTransporterConfigTab;
 import mekanism.client.jei.MekanismJEIRecipeType;
 import mekanism.common.MekanismLang;
 import mekanism.common.config.MekanismConfig;
@@ -66,7 +68,7 @@ public class GuiThermoelectricBoiler extends GuiConfigurableTile<TileEntityCompa
             @Override
             public double getLevel() {
                 return Math.min(1, tile.lastMaxBoil * HeatUtils.getWaterThermalEnthalpy() /
-                                   (tile.superheatingElements * MekanismConfig.general.superheatingHeatTransfer.get()));
+                                   (tile.superHeatingElements * MekanismConfig.general.superheatingHeatTransfer.get()));
             }
         }, 164, 13));
         addRenderableWidget(new GuiGasGauge(() -> tile.superheatedCoolantTank, () -> tile.getGasTanks(null), GaugeType.STANDARD, this, 6, 13)
@@ -81,6 +83,12 @@ public class GuiThermoelectricBoiler extends GuiConfigurableTile<TileEntityCompa
             Component environment = MekanismUtils.getTemperatureDisplay(tile.lastEnvironmentLoss, TemperatureUnit.KELVIN, false);
             return Collections.singletonList(MekanismLang.DISSIPATED_RATE.translate(environment));
         }));
+
+        renderables.forEach(element -> {
+            if(element instanceof GuiSideConfigurationTab<?> tab) {
+                tab.move(-26,0);
+            }
+        });
     }
 
     @Override

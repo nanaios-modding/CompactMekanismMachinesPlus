@@ -6,7 +6,7 @@ import com.nanaios.CompactMekanismMachinesPlus.common.tile.TileEntityCompactTher
 import com.nanaios.CompactMekanismMachinesPlus.client.gui.element.GuiBoilerTab;
 import com.nanaios.CompactMekanismMachinesPlus.client.gui.element.GuiBoilerTab.BoilerTab;
 import mekanism.api.math.MathUtils;
-import mekanism.client.gui.GuiConfigurableTile;
+import mekanism.client.gui.GuiMekanismTile;
 import mekanism.client.gui.element.graph.GuiLongGraph;
 import mekanism.client.gui.element.tab.GuiHeatTab;
 import mekanism.common.MekanismLang;
@@ -21,7 +21,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import org.jetbrains.annotations.NotNull;
 
-public class GuiBoilerStats extends GuiConfigurableTile<TileEntityCompactThermoelectricBoiler, EmptyTileContainer<TileEntityCompactThermoelectricBoiler>> {
+public class GuiBoilerStats extends GuiMekanismTile<TileEntityCompactThermoelectricBoiler, EmptyTileContainer<TileEntityCompactThermoelectricBoiler>> {
 
     private GuiLongGraph boilGraph;
     private GuiLongGraph maxGraph;
@@ -40,7 +40,7 @@ public class GuiBoilerStats extends GuiConfigurableTile<TileEntityCompactThermoe
         }));
         boilGraph = addRenderableWidget(new GuiLongGraph(this, 7, 82, 162, 38, MekanismLang.BOIL_RATE::translate));
         maxGraph = addRenderableWidget(new GuiLongGraph(this, 7, 121, 162, 38, MekanismLang.MAX_BOIL_RATE::translate));
-        maxGraph.enableFixedScale(MathUtils.clampToLong((MekanismConfig.general.superheatingHeatTransfer.get() * tile.superheatingElements) / HeatUtils.getWaterThermalEnthalpy()));
+        maxGraph.enableFixedScale(MathUtils.clampToLong((MekanismConfig.general.superheatingHeatTransfer.get() * tile.superHeatingElements) / HeatUtils.getWaterThermalEnthalpy()));
     }
 
     @Override
@@ -49,7 +49,7 @@ public class GuiBoilerStats extends GuiConfigurableTile<TileEntityCompactThermoe
         drawString(guiGraphics, MekanismLang.BOILER_MAX_WATER.translate(TextUtils.format(tile.waterTank.getCapacity())), 8, 26, titleTextColor());
         drawString(guiGraphics, MekanismLang.BOILER_MAX_STEAM.translate(TextUtils.format(tile.steamTank.getCapacity())), 8, 35, titleTextColor());
         drawString(guiGraphics, MekanismLang.BOILER_HEAT_TRANSFER.translate(), 8, 49, subheadingTextColor());
-        drawString(guiGraphics, MekanismLang.BOILER_HEATERS.translate(tile.superheatingElements), 14, 58, titleTextColor());
+        drawString(guiGraphics, MekanismLang.BOILER_HEATERS.translate(tile.superHeatingElements), 14, 58, titleTextColor());
         drawString(guiGraphics, MekanismLang.BOILER_CAPACITY.translate(TextUtils.format(tile.getBoilCapacity())), 8, 72, titleTextColor());
         super.drawForegroundText(guiGraphics, mouseX, mouseY);
     }

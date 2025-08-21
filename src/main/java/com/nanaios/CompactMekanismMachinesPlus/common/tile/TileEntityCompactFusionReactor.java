@@ -176,12 +176,16 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
         if(fluidConfig != null) {
             fluidConfig.addSlotInfo(DataType.INPUT,new FluidSlotInfo(true,false,waterTank));
             fluidConfig.setDataType(DataType.INPUT,RelativeSide.values());
+
+            fluidConfig.setCanEject(false);
         }
 
         ConfigInfo itemConfig = configComponent.getConfig(TransmissionType.ITEM);
         if(itemConfig != null) {
             itemConfig.addSlotInfo(DataType.INPUT,new InventorySlotInfo(true,false,reactorSlot));
             itemConfig.setDataType(DataType.INPUT,RelativeSide.values());
+
+            itemConfig.setCanEject(false);
         }
 
         ejectorComponent = new TileComponentEjector(this, ()->Long.MAX_VALUE,()->Integer.MAX_VALUE,()-> FloatingLong.create(Long.MAX_VALUE));
@@ -213,6 +217,8 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
                 if (fuelBurned == 0) {
                     setBurning(false);
                 }
+            } else {
+                setActive(false);
             }
         } else {
             setActive(false);
