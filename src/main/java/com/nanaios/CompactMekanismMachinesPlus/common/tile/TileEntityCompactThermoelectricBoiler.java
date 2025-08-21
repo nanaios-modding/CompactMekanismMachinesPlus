@@ -43,9 +43,13 @@ import mekanism.common.util.MekanismUtils;
 import mekanism.common.util.NBTUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.util.Mth;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import mekanism.common.content.boiler.BoilerMultiblockData;
 
 import java.util.List;
 
@@ -60,8 +64,11 @@ public class TileEntityCompactThermoelectricBoiler extends TileEntityConfigurabl
 
     //ボイラーの底面積。18 * 18
     public static final int BOILER_BASE_AREA = 324;
-    //
+    //ボイラーの高さ
     public static final int BOILER_HEIGHT = 18;
+
+    public static final int MAX_DISPERSERS_Y = 2;
+    public static final int MIN_DISPERSERS_Y = 17;
 
     @ContainerSync
     public IGasTank superheatedCoolantTank;
@@ -155,18 +162,21 @@ public class TileEntityCompactThermoelectricBoiler extends TileEntityConfigurabl
         ejectorComponent = new TileComponentEjector(this,() -> Long.MAX_VALUE,() -> Integer.MAX_VALUE, () -> FloatingLong.MAX_VALUE);
         ejectorComponent.setOutputData(configComponent,TransmissionType.GAS,TransmissionType.FLUID);
         ejectorComponent.setCanEject(type ->  MekanismUtils.canFunction(this));
+
     }
 
     @Override
-    protected void onUpdateServer() {
+    public void onUpdateServer() {
         super.onUpdateServer();
+        //hotMap.put(inventoryID, getTotalTemperature() >= HeatUtils.BASE_BOIL_TEMP - 0.01);
+        // external heat dissipation
         lastEnvironmentLoss = simulateEnvironment();
         // update temperature
         updateHeatCapacitors(null);
         // handle coolant heat transfer
         if (!superheatedCoolantTank.isEmpty()) {
             superheatedCoolantTank.getStack().ifAttributePresent(HeatedCoolant.class, coolantType -> {
-                long toCool = Math.round(TileEntityCompactThermoelectricBoiler.COOLANT_COOLING_EFFICIENCY * superheatedCoolantTank.getStored());
+                long toCool = Math.round(TileEntityCompactThermoelectricBoiler.CASING_HEAT_CAPACITY * superheatedCoolantTank.getStored());
                 toCool = MathUtils.clampToLong(toCool * (1 - heatCapacitor.getTemperature() / HeatUtils.HEATED_COOLANT_TEMP));
                 GasStack cooledCoolant = coolantType.getCooledGas().getStack(toCool);
                 toCool = Math.min(toCool, toCool - cooledCoolantTank.insert(cooledCoolant, Action.EXECUTE, AutomationType.INTERNAL).getAmount());
@@ -201,12 +211,15 @@ public class TileEntityCompactThermoelectricBoiler extends TileEntityConfigurabl
         }
         float waterScale = MekanismUtils.getScale(prevWaterScale, waterTank);
         if (waterScale != prevWaterScale) {
+            //needsPacket = true;
             prevWaterScale = waterScale;
         }
         float steamScale = MekanismUtils.getScale(prevSteamScale, steamTank);
         if (steamScale != prevSteamScale) {
+            //needsPacket = true;
             prevSteamScale = steamScale;
         }
+        //return needsPacket;
     }
 
     private double getHeatAvailable() {
@@ -219,6 +232,9 @@ public class TileEntityCompactThermoelectricBoiler extends TileEntityConfigurabl
             waterVolume = volume;
             waterTankCapacity = volume * MekanismConfig.general.boilerWaterPerTank.get();
             superheatedCoolantCapacity = volume * MekanismConfig.general.boilerHeatedCoolantPerTank.get();
+
+            waterTank.setStackSize(Math.min(waterTank.getFluidAmount(),waterTank.getCapacity()),Action.EXECUTE);
+            superheatedCoolantTank.setStackSize(Math.min(superheatedCoolantTank.getStored(),superheatedCoolantTank.getCapacity()),Action.EXECUTE);
         }
     }
 
@@ -227,7 +243,18 @@ public class TileEntityCompactThermoelectricBoiler extends TileEntityConfigurabl
             steamVolume = volume;
             steamTankCapacity = volume * MekanismConfig.general.boilerSteamPerTank.get();
             cooledCoolantCapacity = volume * MekanismConfig.general.boilerCooledCoolantPerTank.get();
+
+            steamTank.setStackSize(Math.min(steamTank.getStored(),steamTank.getCapacity()),Action.EXECUTE);
+            cooledCoolantTank.setStackSize(Math.min(cooledCoolantTank.getStored(),cooledCoolantTank.getCapacity()),Action.EXECUTE);
         }
+    }
+
+    @Override
+    public double simulateEnvironment() {
+        double invConduction = HeatAPI.AIR_INVERSE_COEFFICIENT + (CASING_INVERSE_INSULATION_COEFFICIENT + CASING_INVERSE_CONDUCTION_COEFFICIENT);
+        double tempToTransfer = (heatCapacitor.getTemperature() - biomeAmbientTemp) / invConduction;
+        heatCapacitor.handleHeat(-tempToTransfer * heatCapacitor.getHeatCapacity());
+        return Math.max(tempToTransfer, 0);
     }
 
     public long getBoilCapacity() {
@@ -242,16 +269,23 @@ public class TileEntityCompactThermoelectricBoiler extends TileEntityConfigurabl
             superHeatingElements = count;
         }
 
+        setVolumes();
+    }
+    public void setDispersersY(int y) {
+        dispersersY = y;
+        maxSuperHeatingElements = 256 * (dispersersY - 2);
+
+        setVolumes();
+    }
+
+    public void setVolumes() {
         int waterVolume = (BOILER_BASE_AREA * (dispersersY - 1)  - superHeatingElements);
         int steamVolume = BOILER_BASE_AREA * (BOILER_HEIGHT - dispersersY);
 
         setWaterVolume(waterVolume);
         setSteamVolume(steamVolume);
 
-    }
-    public void setDispersersY(int y) {
-        dispersersY = y;
-        maxSuperHeatingElements = 256 * (dispersersY - 2);
+
     }
 
     //以下保存系統
@@ -280,11 +314,11 @@ public class TileEntityCompactThermoelectricBoiler extends TileEntityConfigurabl
 
     //以下パケット系統
     public void setSuperHeatingElementsFromPacket(int count) {
-        setSuperHeatingElements(count);
+        setSuperHeatingElements(Mth.clamp(count,0,maxSuperHeatingElements));
         markForSave();
     }
     public void setDispersersYFromPacket(int y) {
-        setDispersersY(y);
+        setDispersersY(Mth.clamp(y,MIN_DISPERSERS_Y,MAX_DISPERSERS_Y));
         markForSave();
     }
 

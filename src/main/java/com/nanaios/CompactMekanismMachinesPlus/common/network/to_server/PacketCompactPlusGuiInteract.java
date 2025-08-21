@@ -1,6 +1,7 @@
 package com.nanaios.CompactMekanismMachinesPlus.common.network.to_server;
 
 import com.nanaios.CompactMekanismMachinesPlus.common.tile.TileEntityCompactFusionReactor;
+import com.nanaios.CompactMekanismMachinesPlus.common.tile.TileEntityCompactThermoelectricBoiler;
 import mekanism.api.functions.TriConsumer;
 import mekanism.common.network.IMekanismPacket;
 import mekanism.common.tile.base.TileEntityMekanism;
@@ -61,6 +62,16 @@ public class PacketCompactPlusGuiInteract implements IMekanismPacket {
         INJECTION_RATE((tile, player, extra) -> {
             if (tile instanceof TileEntityCompactFusionReactor reactorBlock) {
                 reactorBlock.setInjectionRateFromPacket((int) Math.round(extra));
+            }
+        }),
+        SUPER_HEATING_ELEMENTS((tile, player, extra) -> {
+            if (tile instanceof TileEntityCompactThermoelectricBoiler boiler) {
+                boiler.setSuperHeatingElements((int) Math.round(extra));
+            }
+        }),
+        DISPERSERS_Y((tile, player, extra) -> {
+            if (tile instanceof TileEntityCompactThermoelectricBoiler boiler) {
+                boiler.setDispersersY((int) Math.round(extra));
             }
         });
 
