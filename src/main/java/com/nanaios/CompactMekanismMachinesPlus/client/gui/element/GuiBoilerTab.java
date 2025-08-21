@@ -24,17 +24,20 @@ public class GuiBoilerTab extends GuiTabElementType<TileEntityCompactThermoelect
     }
 
     public enum BoilerTab implements TabType<TileEntityCompactThermoelectricBoiler> {
-        MAIN("gases.png", MekanismLang.MAIN_TAB, ClickedCompactPlusTileButton.TAB_MAIN, SpecialColors.TAB_MULTIBLOCK_MAIN),
-        STAT("stats.png", MekanismLang.BOILER_STATS, ClickedCompactPlusTileButton.TAB_STATS, SpecialColors.TAB_MULTIBLOCK_STATS);
+        MAIN("gases.png", MekanismLang.MAIN_TAB, 6,ClickedCompactPlusTileButton.TAB_MAIN, SpecialColors.TAB_MULTIBLOCK_MAIN),
+        STAT("stats.png", MekanismLang.BOILER_STATS, 34,ClickedCompactPlusTileButton.TAB_STATS, SpecialColors.TAB_CONFIGURATION),
+        CONFIG("radial/wrench.png", MekanismLang.BUTTON_CONFIG,62, ClickedCompactPlusTileButton.TAB_CONFIG, SpecialColors.TAB_MULTIBLOCK_STATS);
 
         private final ColorRegistryObject colorRO;
         private final ClickedCompactPlusTileButton button;
         private final ILangEntry description;
         private final String path;
+        private final int yPos;
 
-        BoilerTab(String path, ILangEntry description, ClickedCompactPlusTileButton button, ColorRegistryObject colorRO) {
+        BoilerTab(String path, ILangEntry description,int yPos, ClickedCompactPlusTileButton button, ColorRegistryObject colorRO) {
             this.path = path;
             this.description = description;
+            this.yPos = yPos;
             this.button = button;
             this.colorRO = colorRO;
         }
@@ -52,6 +55,11 @@ public class GuiBoilerTab extends GuiTabElementType<TileEntityCompactThermoelect
         @Override
         public Component getDescription() {
             return description.translate();
+        }
+
+        @Override
+        public int getYPos() {
+            return yPos;
         }
 
         @Override

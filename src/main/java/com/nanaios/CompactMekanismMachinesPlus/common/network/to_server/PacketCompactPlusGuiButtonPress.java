@@ -77,7 +77,9 @@ public class PacketCompactPlusGuiButtonPress implements IMekanismPacket {
             CompactMekanismMachinesPlus.LOGGER.info("tile not instanceof");
             return null;
         }),
+        TAB_CONFIG((tile, extra) -> CompactPlusContainerTypes.BOILER_CONFIG.getProvider(MekanismLang.BOILER, tile)),
         TAB_MAIN((tile, extra) -> CompactPlusContainerTypes.COMPACT_THERMOELECTRIC_BOILER.getProvider(MekanismLang.BOILER, tile));
+
         private final BiFunction<TileEntityMekanism, Integer, MenuProvider> providerFromTile;
 
         ClickedCompactPlusTileButton(BiFunction<TileEntityMekanism, Integer, MenuProvider> providerFromTile) {

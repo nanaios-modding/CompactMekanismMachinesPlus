@@ -25,7 +25,7 @@ public class CompactPlusClientRegistration {
             ClientRegistrationUtil.registerScreen(CompactPlusContainerTypes.COMPACT_SPS, GuiSPS::new);
             ClientRegistrationUtil.registerScreen(CompactPlusContainerTypes.COMPACT_THERMOELECTRIC_BOILER, GuiThermoelectricBoiler::new);
             ClientRegistrationUtil.registerScreen(CompactPlusContainerTypes.BOILER_STATS, GuiBoilerStats::new);
-
+            ClientRegistrationUtil.registerScreen(CompactPlusContainerTypes.BOILER_CONFIG, GuiBoilerConfig::new);
         });
     }
 }

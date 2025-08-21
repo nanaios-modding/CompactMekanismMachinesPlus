@@ -48,6 +48,7 @@ public class GuiThermoelectricBoiler extends GuiConfigurableTile<TileEntityCompa
                   MekanismLang.BOIL_RATE.translate(TextUtils.format(tile.lastBoilRate)), MekanismLang.MAX_BOIL_RATE.translate(TextUtils.format(tile.lastMaxBoil)));
         }).jeiCategories(MekanismJEIRecipeType.BOILER));
         addRenderableWidget(new GuiBoilerTab(this, tile, BoilerTab.STAT));
+        addRenderableWidget(new GuiBoilerTab(this, tile, BoilerTab.CONFIG));
         addRenderableWidget(new GuiVerticalRateBar(this, new IBarInfoHandler() {
             @Override
             public Component getTooltip() {

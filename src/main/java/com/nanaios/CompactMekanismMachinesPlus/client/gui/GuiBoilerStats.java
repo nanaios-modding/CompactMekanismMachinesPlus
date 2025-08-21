@@ -34,6 +34,7 @@ public class GuiBoilerStats extends GuiMekanismTile<TileEntityCompactThermoelect
     protected void addGuiElements() {
         super.addGuiElements();
         addRenderableWidget(new GuiBoilerTab(this, tile, BoilerTab.MAIN));
+        addRenderableWidget(new GuiBoilerTab(this, tile, BoilerTab.CONFIG));
         addRenderableWidget(new GuiHeatTab(this, () -> {
             Component environment = MekanismUtils.getTemperatureDisplay(tile.lastEnvironmentLoss, TemperatureUnit.KELVIN, false);
             return Collections.singletonList(MekanismLang.DISSIPATED_RATE.translate(environment));

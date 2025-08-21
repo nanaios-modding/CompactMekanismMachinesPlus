@@ -21,6 +21,7 @@ public class CompactPlusContainerTypes {
     public static final ContainerTypeRegistryObject<MekanismTileContainer<TileEntityCompactSPS>> COMPACT_SPS;
     public static final ContainerTypeRegistryObject<MekanismTileContainer<TileEntityCompactThermoelectricBoiler>> COMPACT_THERMOELECTRIC_BOILER;
     public static final ContainerTypeRegistryObject<EmptyTileContainer<TileEntityCompactThermoelectricBoiler>> BOILER_STATS;
+    public static final ContainerTypeRegistryObject<EmptyTileContainer<TileEntityCompactThermoelectricBoiler>> BOILER_CONFIG;
 
     static {
         COMPACT_FUSION_REACTOR = CONTAINER_TYPES.custom(CompactPlusBlocks.COMPACT_FUSION_REACTOR, TileEntityCompactFusionReactor.class).offset(5, 0).build();
@@ -32,5 +33,7 @@ public class CompactPlusContainerTypes {
 
         COMPACT_THERMOELECTRIC_BOILER = CONTAINER_TYPES.custom("compact_thermoelectric_boiler", TileEntityCompactThermoelectricBoiler.class).offset(21, 0).build();
         BOILER_STATS = CONTAINER_TYPES.registerEmpty("boiler_stats", TileEntityCompactThermoelectricBoiler.class);
+        BOILER_CONFIG = CONTAINER_TYPES.registerEmpty("boiler_config", TileEntityCompactThermoelectricBoiler.class);
+
     }
 }
