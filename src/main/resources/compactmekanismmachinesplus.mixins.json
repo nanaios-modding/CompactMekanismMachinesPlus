@@ -5,7 +5,8 @@
   "compatibilityLevel": "JAVA_17",
   "plugin": "com.nanaios.CompactMekanismMachinesPlus.common.mixin.MekanismNeutronActivatorMixinConfig",
   "mixins": [
-    "MixinTileEntityFusionNeutronActivator"
+    "MixinTileEntityFusionNeutronActivator",
+    "TestMixin"
   ],
   "client": [],
   "injectors": {

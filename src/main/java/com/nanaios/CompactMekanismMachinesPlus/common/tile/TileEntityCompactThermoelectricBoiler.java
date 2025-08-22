@@ -137,7 +137,7 @@ public class TileEntityCompactThermoelectricBoiler extends TileEntityConfigurabl
             gasConfig.addSlotInfo(DataType.OUTPUT_2,new ChemicalSlotInfo.GasSlotInfo(false,true,steamTank));
 
             gasConfig.setDataType(DataType.INPUT, RelativeSide.LEFT);
-            gasConfig.setDataType(DataType.OUTPUT_1, RelativeSide.TOP);
+            gasConfig.setDataType(DataType.OUTPUT_1, RelativeSide.BOTTOM);
             gasConfig.setDataType(DataType.OUTPUT_2, RelativeSide.RIGHT);
 
             gasConfig.setEjecting(true);
@@ -146,7 +146,7 @@ public class TileEntityCompactThermoelectricBoiler extends TileEntityConfigurabl
         ConfigInfo fluidConfig =configComponent.getConfig(TransmissionType.FLUID);
         if(fluidConfig != null) {
             fluidConfig.addSlotInfo(DataType.INPUT,new FluidSlotInfo(true,false,waterTank));
-            fluidConfig.setDataType(DataType.INPUT,RelativeSide.BACK);
+            fluidConfig.setDataType(DataType.INPUT,RelativeSide.values());
 
             fluidConfig.setCanEject(false);
         }
@@ -176,10 +176,16 @@ public class TileEntityCompactThermoelectricBoiler extends TileEntityConfigurabl
         // handle coolant heat transfer
         if (!superheatedCoolantTank.isEmpty()) {
             superheatedCoolantTank.getStack().ifAttributePresent(HeatedCoolant.class, coolantType -> {
-                long toCool = Math.round(TileEntityCompactThermoelectricBoiler.CASING_HEAT_CAPACITY * superheatedCoolantTank.getStored());
-                toCool = MathUtils.clampToLong(toCool * (1 - heatCapacitor.getTemperature() / HeatUtils.HEATED_COOLANT_TEMP));
+                long toCool = 471449600;// = Math.round(TileEntityCompactThermoelectricBoiler.COOLANT_COOLING_EFFICIENCY * superheatedCoolantTank.getStored());
+
+                double nowTemp = heatCapacitor.getTemperature();
+
+                toCool = MathUtils.clampToLong(toCool * (1 - nowTemp/ HeatUtils.HEATED_COOLANT_TEMP));
                 GasStack cooledCoolant = coolantType.getCooledGas().getStack(toCool);
                 toCool = Math.min(toCool, toCool - cooledCoolantTank.insert(cooledCoolant, Action.EXECUTE, AutomationType.INTERNAL).getAmount());
+
+                cooledCoolantTank.onContentsChanged();
+
                 if (toCool > 0) {
                     double heatEnergy = toCool * coolantType.getThermalEnthalpy();
                     heatCapacitor.handleHeat(heatEnergy);
@@ -359,6 +365,8 @@ public class TileEntityCompactThermoelectricBoiler extends TileEntityConfigurabl
     public IHeatCapacitorHolder getInitialHeatCapacitors(IContentsListener listener, CachedAmbientTemperature ambientTemperature){
         HeatCapacitorHelper builder = HeatCapacitorHelper.forSide(this::getDirection);
         builder.addCapacitor(heatCapacitor = VariableHeatCapacitor.create(CASING_HEAT_CAPACITY, () -> CASING_INVERSE_CONDUCTION_COEFFICIENT, () -> CASING_INVERSE_INSULATION_COEFFICIENT, () -> biomeAmbientTemp, listener));
+        heatCapacitor.setHeatCapacity(CASING_HEAT_CAPACITY * 1736, true);
+
         return builder.build();
     }
 }
