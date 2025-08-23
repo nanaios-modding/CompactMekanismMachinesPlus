@@ -2,6 +2,7 @@ package com.nanaios.CompactMekanismMachinesPlus.client.gui;
 
 import com.nanaios.CompactMekanismMachinesPlus.client.gui.element.GuiBoilerTab;
 import com.nanaios.CompactMekanismMachinesPlus.common.CompactMekanismMachinesPlus;
+import com.nanaios.CompactMekanismMachinesPlus.common.CompactPlusLang;
 import com.nanaios.CompactMekanismMachinesPlus.common.network.to_server.PacketCompactPlusGuiInteract;
 import com.nanaios.CompactMekanismMachinesPlus.common.tile.TileEntityCompactThermoelectricBoiler;
 import mekanism.client.gui.GuiMekanismTile;
@@ -12,8 +13,11 @@ import mekanism.common.inventory.container.tile.EmptyTileContainer;
 import mekanism.common.util.MekanismUtils;
 import mekanism.common.util.UnitDisplayUtils;
 import mekanism.common.util.text.InputValidator;
+import mekanism.generators.common.GeneratorsLang;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
 
@@ -45,6 +49,17 @@ public class GuiBoilerConfig extends GuiMekanismTile<TileEntityCompactThermoelec
         superHeatingElementsField.setInputValidator(InputValidator.DIGIT)
                 .setEnterHandler(this::setSuperHeatingElements)
                 .setMaxLength(4);
+    }
+
+    @Override
+    protected void drawForegroundText(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY) {
+        renderTitleText(guiGraphics);
+
+        drawString(guiGraphics, CompactPlusLang.DISPERSERS_Y.translate(tile.getDispersersY()), 8,26,titleTextColor());
+        drawString(guiGraphics ,Component.literal("0 <"),8,41,titleTextColor());
+        drawString(guiGraphics, CompactPlusLang.DISPERSERS_Y.translate(tile.getSuperHeatingElements()), 8,66,titleTextColor());
+
+        super.drawForegroundText(guiGraphics, mouseX, mouseY);
     }
 
     private void setSuperHeatingElements() {

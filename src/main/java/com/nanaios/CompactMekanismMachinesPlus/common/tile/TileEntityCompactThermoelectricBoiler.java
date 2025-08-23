@@ -294,6 +294,14 @@ public class TileEntityCompactThermoelectricBoiler extends TileEntityConfigurabl
 
     }
 
+    public int getDispersersY() {
+        return dispersersY;
+    }
+
+    public int getSuperHeatingElements() {
+        return superHeatingElements;
+    }
+
     //以下保存系統
     @Override
     public void load(@NotNull CompoundTag tag) {
