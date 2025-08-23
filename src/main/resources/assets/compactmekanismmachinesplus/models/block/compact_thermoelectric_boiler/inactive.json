@@ -1,0 +1,7 @@
+{
+  "parent": "compactmekanismmachinesplus:block/machine",
+  "textures": {
+    "sides": "mekanism:block/boiler_casing",
+    "front": "compactmekanismmachinesplus:block/boiler/front"
+  }
+}

@@ -2,6 +2,6 @@
   "parent": "compactmekanismmachinesplus:block/machine",
   "textures": {
     "sides": "mekanism:block/sps_casing",
-    "front": "compactmekanismmachinesplus:block/sps_front"
+    "front": "compactmekanismmachinesplus:block/sps/front"
   }
 }

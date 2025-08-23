@@ -2,7 +2,7 @@
   "parent": "compactmekanismmachinesplus:block/machine_front_led",
   "textures": {
     "sides": "mekanism:block/sps_casing",
-    "front": "compactmekanismmachinesplus:block/sps_front",
-    "front_led":"compactmekanismmachinesplus:block/sps_front_on_led"
+    "front": "compactmekanismmachinesplus:block/sps/front",
+    "front_led":"compactmekanismmachinesplus:block/sps/front_on_led"
   }
 }

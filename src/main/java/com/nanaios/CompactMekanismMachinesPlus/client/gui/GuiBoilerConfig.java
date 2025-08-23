@@ -40,12 +40,12 @@ public class GuiBoilerConfig extends GuiMekanismTile<TileEntityCompactThermoelec
             return Collections.singletonList(MekanismLang.DISSIPATED_RATE.translate(environment));
         }));
 
-        dispersersYField = addRenderableWidget(new GuiTextField(this,88,115,26,11));
+        dispersersYField = addRenderableWidget(new GuiTextField(this,28,41,26,11));
         dispersersYField.setInputValidator(InputValidator.DIGIT)
                 .setEnterHandler(this::setDispersersY)
                 .setMaxLength(2);
 
-        superHeatingElementsField = addRenderableWidget(new GuiTextField(this, 98, 145, 46, 11));
+        superHeatingElementsField = addRenderableWidget(new GuiTextField(this, 28, 91, 46, 11));
         superHeatingElementsField.setInputValidator(InputValidator.DIGIT)
                 .setEnterHandler(this::setSuperHeatingElements)
                 .setMaxLength(4);
@@ -56,8 +56,11 @@ public class GuiBoilerConfig extends GuiMekanismTile<TileEntityCompactThermoelec
         renderTitleText(guiGraphics);
 
         drawString(guiGraphics, CompactPlusLang.DISPERSERS_Y.translate(tile.getDispersersY()), 8,26,titleTextColor());
-        drawString(guiGraphics ,Component.literal("0 <"),8,41,titleTextColor());
-        drawString(guiGraphics, CompactPlusLang.DISPERSERS_Y.translate(tile.getSuperHeatingElements()), 8,66,titleTextColor());
+        drawString(guiGraphics ,Component.literal("1 <"),8,43,titleTextColor());
+        drawString(guiGraphics ,Component.literal("< " + TileEntityCompactThermoelectricBoiler.BOILER_HEIGHT),58,43,titleTextColor());
+        drawString(guiGraphics, CompactPlusLang.SUPER_HEATING_ELEMENTS.translate(tile.getSuperHeatingElements()), 8,76,titleTextColor());
+        drawString(guiGraphics ,Component.literal("0 ≦"),8,93,titleTextColor());
+        drawString(guiGraphics ,Component.literal("≦ " + tile.maxSuperHeatingElements),78,93,titleTextColor());
 
         super.drawForegroundText(guiGraphics, mouseX, mouseY);
     }

@@ -1,6 +1,7 @@
 {
   "values": [
     "compactmekanismmachinesplus:compact_fusion_reactor",
-    "compactmekanismmachinesplus:compact_sps"
+    "compactmekanismmachinesplus:compact_sps",
+    "compactmekanismmachinesplus:compact_thermoelectric_boiler"
   ]
 }

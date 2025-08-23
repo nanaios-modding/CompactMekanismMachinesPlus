@@ -66,12 +66,12 @@ public class PacketCompactPlusGuiInteract implements IMekanismPacket {
         }),
         SUPER_HEATING_ELEMENTS((tile, player, extra) -> {
             if (tile instanceof TileEntityCompactThermoelectricBoiler boiler) {
-                boiler.setSuperHeatingElements((int) Math.round(extra));
+                boiler.setSuperHeatingElementsFromPacket((int) Math.round(extra));
             }
         }),
         DISPERSERS_Y((tile, player, extra) -> {
             if (tile instanceof TileEntityCompactThermoelectricBoiler boiler) {
-                boiler.setDispersersY((int) Math.round(extra));
+                boiler.setDispersersYFromPacket((int) Math.round(extra));
             }
         });
 
