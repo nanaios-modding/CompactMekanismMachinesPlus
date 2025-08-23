@@ -67,8 +67,8 @@ public class TileEntityCompactThermoelectricBoiler extends TileEntityConfigurabl
     //ボイラーの高さ
     public static final int BOILER_HEIGHT = 18;
 
-    public static final int MAX_DISPERSERS_Y = 2;
-    public static final int MIN_DISPERSERS_Y = BOILER_HEIGHT - 1;
+    public static final int MAX_DISPERSERS_Y = BOILER_HEIGHT - 1;
+    public static final int MIN_DISPERSERS_Y = 2;
 
     @ContainerSync
     public IGasTank superheatedCoolantTank;
@@ -195,6 +195,7 @@ public class TileEntityCompactThermoelectricBoiler extends TileEntityConfigurabl
         }
         // handle water heat transfer
         if (getTotalTemperature() >= HeatUtils.BASE_BOIL_TEMP && !waterTank.isEmpty()) {
+            setActive(true);
             double heatAvailable = getHeatAvailable();
             lastMaxBoil = (int) Math.floor(HeatUtils.getSteamEnergyEfficiency() * heatAvailable / HeatUtils.getWaterThermalEnthalpy());
 
@@ -212,6 +213,7 @@ public class TileEntityCompactThermoelectricBoiler extends TileEntityConfigurabl
             heatCapacitor.handleHeat(-amountToBoil * HeatUtils.getWaterThermalEnthalpy() / HeatUtils.getSteamEnergyEfficiency());
             lastBoilRate = amountToBoil;
         } else {
+            setActive(false);
             lastBoilRate = 0;
             lastMaxBoil = 0;
         }

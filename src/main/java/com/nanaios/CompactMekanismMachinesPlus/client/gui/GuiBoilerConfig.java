@@ -58,7 +58,7 @@ public class GuiBoilerConfig extends GuiMekanismTile<TileEntityCompactThermoelec
         drawString(guiGraphics, CompactPlusLang.DISPERSERS_Y.translate(tile.getDispersersY()), 8,26,titleTextColor());
         drawString(guiGraphics ,Component.literal("1 <"),8,43,titleTextColor());
         drawString(guiGraphics ,Component.literal("< " + TileEntityCompactThermoelectricBoiler.BOILER_HEIGHT),58,43,titleTextColor());
-        drawString(guiGraphics, CompactPlusLang.SUPER_HEATING_ELEMENTS.translate(tile.getSuperHeatingElements()), 8,76,titleTextColor());
+        drawString(guiGraphics, MekanismLang.BOILER_HEATERS.translate(tile.getSuperHeatingElements()), 8,76,titleTextColor());
         drawString(guiGraphics ,Component.literal("0 ≦"),8,93,titleTextColor());
         drawString(guiGraphics ,Component.literal("≦ " + tile.maxSuperHeatingElements),78,93,titleTextColor());
 

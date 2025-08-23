@@ -6,6 +6,5 @@
 
   "reactor.compactmekanismmachinesplus.stats.active": "稼働中",
 
-  "boiler.compactmekanismmachinesplus.stats.dispersers_y": "圧力分散機の高さ: %1$s",
-  "boiler.compactmekanismmachinesplus.stats.super_heating_elements": "過熱素子の数: %1$s"
+  "boiler.compactmekanismmachinesplus.stats.dispersers_y": "圧力分散機の高さ: %1$s"
 }

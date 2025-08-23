@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "aba",
+    "cdc",
+    "aca"
+  ],
+  "key": {
+    "a": {
+      "item": "mekanism:boiler_casing"
+    },
+    "b": {
+      "item": "mekanism:pressure_disperser"
+    },
+    "c":{
+      "item": "mekanism:structural_glass"
+    },
+    "d": {
+      "item": "mekanism:superheating_element"
+    }
+  },
+  "result": {
+    "item": "compactmekanismmachinesplus:compact_thermoelectric_boiler"
+  }
+}

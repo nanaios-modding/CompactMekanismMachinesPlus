@@ -6,7 +6,6 @@ import net.minecraft.Util;
 public enum CompactPlusLang implements ILangEntry {
     FUSION_REACTOR_ACTIVE("reactor", "stats.active"),
     DISPERSERS_Y("boiler","stats.dispersers_y"),
-    SUPER_HEATING_ELEMENTS("boiler","stats.super_heating_elements"),
     COMPACTMEKANISMMACHINESPLUS("other","mod_name");
 
     private final String key;
