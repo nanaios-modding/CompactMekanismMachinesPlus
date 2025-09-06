@@ -7,13 +7,11 @@ import com.nanaios.CompactMekanismMachinesPlus.common.registries.CompactPlusCrea
 import com.nanaios.CompactMekanismMachinesPlus.common.registries.CompactPlusTileEntityTypes;
 import mekanism.common.base.IModModule;
 import mekanism.common.lib.Version;
-import mekanism.generators.common.network.GeneratorsPacketHandler;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.fml.ModLoadingContext;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.ModLoadingContext;
+import net.neoforged.fml.common.Mod;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -30,11 +28,8 @@ public class CompactMekanismMachinesPlus implements IModModule {
 
     private final CompactPlusPacketHandler packetHandler;
 
-    @SuppressWarnings("removal")
-    public  CompactMekanismMachinesPlus(FMLJavaModLoadingContext context) {
+    public  CompactMekanismMachinesPlus(IEventBus modEventBus, ModContainer modContainer) {
         instance = this;
-
-        IEventBus modEventBus = context.getModEventBus();
 
         //listenerを登録
         modEventBus.addListener(this::commonSetup);
@@ -50,7 +45,7 @@ public class CompactMekanismMachinesPlus implements IModModule {
         packetHandler = new CompactPlusPacketHandler();
     }
 
-    private void commonSetup(FMLCommonSetupEvent event) {
+    private void commonSetup(IEventBus modEventBus) {
         packetHandler.initialize();
     }
 
@@ -58,16 +53,11 @@ public class CompactMekanismMachinesPlus implements IModModule {
         return instance.packetHandler;
     }
 
-    @SuppressWarnings("removal")
     public static ResourceLocation rl(String path) {
-        return new ResourceLocation(CompactMekanismMachinesPlus.MODID, path);
+        return ResourceLocation.fromNamespaceAndPath(CompactMekanismMachinesPlus.MODID, path);
     }
 
     public Version getVersion() {return versionNumber;}
 
     public String getName() {return "CompactMekanismMachinesPlus";}
-
-    public void resetClient() {
-
-    }
 }
