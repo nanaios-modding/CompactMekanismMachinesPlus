@@ -3,11 +3,16 @@ package com.nanaios.CompactMekanismMachinesPlus.common.network;
 import com.nanaios.CompactMekanismMachinesPlus.common.CompactMekanismMachinesPlus;
 import com.nanaios.CompactMekanismMachinesPlus.common.network.to_server.PacketCompactPlusGuiButtonPress;
 import com.nanaios.CompactMekanismMachinesPlus.common.network.to_server.PacketCompactPlusGuiInteract;
+import mekanism.common.lib.Version;
 import mekanism.common.network.BasePacketHandler;
-import net.minecraftforge.network.simple.SimpleChannel;
+import net.neoforged.bus.api.IEventBus;
 
 public class CompactPlusPacketHandler extends BasePacketHandler {
     private final SimpleChannel netHandler = createChannel(CompactMekanismMachinesPlus.rl(CompactMekanismMachinesPlus.MODID), CompactMekanismMachinesPlus.instance.versionNumber);
+
+    protected CompactPlusPacketHandler(IEventBus modEventBus, Version version) {
+        super(modEventBus, version);
+    }
 
     @Override
     protected SimpleChannel getChannel() {
@@ -20,5 +25,14 @@ public class CompactPlusPacketHandler extends BasePacketHandler {
         registerClientToServer(PacketCompactPlusGuiButtonPress.class, PacketCompactPlusGuiButtonPress::decode);
         registerClientToServer(PacketCompactPlusGuiInteract.class, PacketCompactPlusGuiInteract::decode);
         //Server to client messages
+    }
+
+    @Override
+    protected void registerClientToServer(PacketRegistrar registrar) {
+    }
+
+    @Override
+    protected void registerServerToClient(PacketRegistrar registrar) {
+
     }
 }
