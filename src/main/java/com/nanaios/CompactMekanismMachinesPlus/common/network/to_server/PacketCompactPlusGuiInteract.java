@@ -12,6 +12,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.network.NetworkEvent;
 
+//TODO 1.21.1対応
+
 public class PacketCompactPlusGuiInteract implements IMekanismPacket {
 
     private final CompactPlusGuiInteraction interaction;

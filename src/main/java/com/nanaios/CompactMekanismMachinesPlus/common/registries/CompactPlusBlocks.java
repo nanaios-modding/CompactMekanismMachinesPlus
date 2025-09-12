@@ -13,6 +13,8 @@ import mekanism.common.resource.BlockResourceInfo;
 import mekanism.generators.common.content.blocktype.Generator;
 import net.minecraft.world.level.material.MapColor;
 
+//TODO 1.21.1対応
+
 public class CompactPlusBlocks {
     private CompactPlusBlocks() {}
     public static final BlockDeferredRegister BLOCKS = new BlockDeferredRegister(CompactMekanismMachinesPlus.MODID);

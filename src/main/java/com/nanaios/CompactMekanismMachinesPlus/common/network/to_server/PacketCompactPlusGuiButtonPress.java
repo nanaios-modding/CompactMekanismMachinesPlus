@@ -18,6 +18,8 @@ import net.minecraftforge.network.NetworkHooks;
 
 import java.util.function.BiFunction;
 
+//TODO 1.21.1対応
+
 public class PacketCompactPlusGuiButtonPress implements IMekanismPacket {
 
     private final ClickedCompactPlusTileButton tileButton;

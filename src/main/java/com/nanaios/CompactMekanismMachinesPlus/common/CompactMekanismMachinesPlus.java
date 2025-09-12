@@ -7,13 +7,14 @@ import com.nanaios.CompactMekanismMachinesPlus.common.registries.CompactPlusCrea
 import com.nanaios.CompactMekanismMachinesPlus.common.registries.CompactPlusTileEntityTypes;
 import mekanism.common.base.IModModule;
 import mekanism.common.lib.Version;
-import net.minecraft.resources.ResourceLocation;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
-import net.neoforged.fml.ModLoadingContext;
 import net.neoforged.fml.common.Mod;
 import org.apache.logging.log4j.LogManager;
+import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.Logger;
+
+//TODO 1.21.1対応
 
 @Mod(CompactMekanismMachinesPlus.MODID)
 public class CompactMekanismMachinesPlus implements IModModule {
@@ -41,7 +42,7 @@ public class CompactMekanismMachinesPlus implements IModModule {
         CompactPlusTileEntityTypes.TILE_ENTITY_TYPES.register(modEventBus);
 
         //情報をセット
-        versionNumber = new Version(ModLoadingContext.get().getActiveContainer());
+        versionNumber = new Version(modContainer);
         packetHandler = new CompactPlusPacketHandler();
     }
 

@@ -27,17 +27,17 @@ public class CompactPlusBlockTypes {
                 .withEnergyConfig(() -> MekanismGeneratorsConfig.generators.fusionEnergyCapacity.get())
                 .withGui(() -> CompactPlusContainerTypes.COMPACT_FUSION_REACTOR, GeneratorsLang.FUSION_REACTOR)
                 .withSound(GeneratorsSounds.FUSION_REACTOR)
-                .withSupportedUpgrades(EnumSet.of(Upgrade.MUFFLING))
+                .withSupportedUpgrades(Upgrade.MUFFLING)
                 .build();
         COMPACT_SPS = Machine.MachineBuilder.createMachine(() -> CompactPlusTileEntityTypes.COMPACT_SPS, MekanismLang.DESCRIPTION_SPS_CASING)
                 .withGui(() -> CompactPlusContainerTypes.COMPACT_SPS,MekanismLang.SPS)
                 .withSound(MekanismSounds.SPS)
                 .withEnergyConfig(MekanismConfig.storage.spsPort)
-                .withSupportedUpgrades(EnumSet.of(Upgrade.MUFFLING))
+                .withSupportedUpgrades(Upgrade.MUFFLING)
                 .build();
         COMPACT_THERMOELECTRIC_BOILER = Machine.MachineBuilder.createMachine(() -> CompactPlusTileEntityTypes.COMPACT_THERMOELECTRIC_BOILER,MekanismLang.DESCRIPTION_BOILER_CASING)
                 .withGui(() -> CompactPlusContainerTypes.COMPACT_THERMOELECTRIC_BOILER,MekanismLang.BOILER)
-                .withSupportedUpgrades(EnumSet.of(Upgrade.MUFFLING))
+                .withSupportedUpgrades(Upgrade.MUFFLING)
                 .build();
     }
 }

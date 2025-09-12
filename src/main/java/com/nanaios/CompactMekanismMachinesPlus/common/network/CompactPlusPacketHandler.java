@@ -7,6 +7,8 @@ import mekanism.common.lib.Version;
 import mekanism.common.network.BasePacketHandler;
 import net.neoforged.bus.api.IEventBus;
 
+//TODO 1.21.1対応
+
 public class CompactPlusPacketHandler extends BasePacketHandler {
     private final SimpleChannel netHandler = createChannel(CompactMekanismMachinesPlus.rl(CompactMekanismMachinesPlus.MODID), CompactMekanismMachinesPlus.instance.versionNumber);
 
