@@ -7,8 +7,6 @@ import mekanism.common.registration.impl.CreativeTabDeferredRegister;
 import mekanism.common.registries.MekanismCreativeTabs;
 import net.minecraft.world.item.CreativeModeTab;
 
-//TODO 1.21.1対応
-
 public class CompactPlusCreativeTabs {
     private CompactPlusCreativeTabs() {}
 
@@ -17,7 +15,7 @@ public class CompactPlusCreativeTabs {
     public static final MekanismDeferredHolder<CreativeModeTab,CreativeModeTab> TAB;
 
     static {
-        TAB = CREATIVE_TABS.registerMain(CompactPlusLang.COMPACTMEKANISMMACHINESPLUS, CompactPlusBlocks.COMPACT_FUSION_REACTOR, builder ->
+        TAB = CREATIVE_TABS.registerMain(CompactPlusLang.COMPACTMEKANISMMACHINESPLUS, CompactPlusBlocks.COMPACT_FUSION_REACTOR.getItemHolder(), builder ->
                 builder.withTabsBefore(MekanismCreativeTabs.MEKANISM.getKey())
                         .displayItems((displayParameters, output) -> {
                             CreativeTabDeferredRegister.addToDisplay(CompactPlusBlocks.BLOCKS, output);
