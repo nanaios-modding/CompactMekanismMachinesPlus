@@ -338,6 +338,10 @@ public class TileEntityCompactThermoelectricBoiler extends TileEntityConfigurabl
         markForSave();
     }
 
+    @Override
+    public @Nullable IChemicalTankHolder getInitialChemicalTanks(IContentsListener listener) {
+        ChemicalTankHelper builder = ChemicalTankHelper.forSideWithConfig();
+    }
 
     //以下初期化系統
     @Override
@@ -367,7 +371,7 @@ public class TileEntityCompactThermoelectricBoiler extends TileEntityConfigurabl
     @NotNull
     @Override
     public IFluidTankHolder getInitialFluidTanks(IContentsListener listener){
-        FluidTankHelper builder = FluidTankHelper.forSideWithConfig(this::getDirection,this::getConfig);
+        FluidTankHelper builder = FluidTankHelper.forSideWithConfig(this::getConfig);
         builder.addTank(waterTank = VariableCapacityFluidTank.input(() -> waterTankCapacity, fluid -> MekanismTags.Fluids.WATER_LOOKUP.contains(fluid.getFluid()), listener));
         return builder.build();
     }
