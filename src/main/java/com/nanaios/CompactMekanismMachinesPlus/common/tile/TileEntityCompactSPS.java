@@ -197,14 +197,18 @@ public class TileEntityCompactSPS extends TileEntityConfigurableMachine {
                 this::getMaxInputGas,
                 ConstantPredicates.alwaysFalseBi(),
                 ConstantPredicates.alwaysTrueBi(),
-                chemicalStack -> chemicalStack.is(MekanismChemicals.POLONIUM),
+                gas -> gas.is(MekanismChemicals.POLONIUM),
                 listener
         );
-        outputTank =
+        outputTank =VariableCapacityChemicalTank.output(
+                MekanismConfig.general.spsOutputTankCapacity::get,
+                gas -> gas.is(MekanismChemicals.ANTIMATTER),
+                listener
+        );
 
         builder.addTank(inputTank);
+        builder.addTank(outputTank);
 
-        builder.addTank(outputTank = VariableCapacityChemicalTankBuilder.GAS.output(() -> MekanismConfig.general.spsOutputTankCapacity.get(), gas -> gas == MekanismGases.ANTIMATTER.get() ,listener));
         return builder.build();
     }
 
