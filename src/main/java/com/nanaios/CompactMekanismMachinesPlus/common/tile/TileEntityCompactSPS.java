@@ -2,17 +2,23 @@ package com.nanaios.CompactMekanismMachinesPlus.common.tile;
 
 import com.nanaios.CompactMekanismMachinesPlus.common.registries.CompactPlusBlocks;
 import mekanism.api.*;
+import mekanism.api.chemical.BasicChemicalTank;
 import mekanism.api.chemical.ChemicalStack;
 import mekanism.api.chemical.IChemicalTank;
 import mekanism.api.chemical.attribute.ChemicalAttributeValidator;
 import mekanism.api.energy.IEnergyContainer;
+import mekanism.api.functions.ConstantPredicates;
 import mekanism.api.math.MathUtils;
+import mekanism.common.attachments.containers.chemical.ChemicalTanksBuilder;
+import mekanism.common.capabilities.chemical.VariableCapacityChemicalTank;
 import mekanism.common.capabilities.energy.MachineEnergyContainer;
 import mekanism.common.capabilities.holder.chemical.ChemicalTankHelper;
+import mekanism.common.capabilities.holder.chemical.IChemicalTankHolder;
 import mekanism.common.capabilities.holder.energy.EnergyContainerHelper;
 import mekanism.common.capabilities.holder.energy.IEnergyContainerHolder;
 import mekanism.common.config.MekanismConfig;
 import mekanism.common.lib.transmitter.TransmissionType;
+import mekanism.common.registries.MekanismChemicals;
 import mekanism.common.tile.component.TileComponentEjector;
 import mekanism.common.tile.component.config.ConfigInfo;
 import mekanism.common.tile.component.config.DataType;
@@ -20,12 +26,16 @@ import mekanism.common.tile.component.config.slot.ChemicalSlotInfo;
 import mekanism.common.tile.component.config.slot.EnergySlotInfo;
 import mekanism.common.tile.prefab.TileEntityConfigurableMachine;
 import mekanism.common.inventory.container.sync.dynamic.ContainerSync;
+import mekanism.common.util.ChemicalUtil;
 import mekanism.common.util.NBTUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.function.Predicate;
 
 public class TileEntityCompactSPS extends TileEntityConfigurableMachine {
 
@@ -46,6 +56,8 @@ public class TileEntityCompactSPS extends TileEntityConfigurableMachine {
     public double lastProcessed;
 
     public boolean couldOperate;
+
+    Predicate<ChemicalStack> validator = chemicalStack -> chemicalStack.is(MekanismChemicals.POLONIUM);
 
     public TileEntityCompactSPS(BlockPos pos, BlockState state) {
         super(CompactPlusBlocks.COMPACT_SPS, pos, state);
@@ -71,7 +83,7 @@ public class TileEntityCompactSPS extends TileEntityConfigurableMachine {
 
         configComponent.setupInputConfig(TransmissionType.CHEMICAL,inputTank);
 
-        ejectorComponent = new TileComponentEjector(this, ()->Long.MAX_VALUE,()->Integer.MAX_VALUE,()-> FloatingLong.create(Long.MAX_VALUE));
+        ejectorComponent = new TileComponentEjector(this, ()->Long.MAX_VALUE,()->Integer.MAX_VALUE,() -> Long.MAX_VALUE);
         ejectorComponent.setOutputData(configComponent,TransmissionType.CHEMICAL);
         ejectorComponent.setCanTankEject(tank -> tank == outputTank);
 
@@ -108,9 +120,6 @@ public class TileEntityCompactSPS extends TileEntityConfigurableMachine {
         if (receivedEnergy != lastReceivedEnergy || processed != lastProcessed) {
             needsPacket = true;
         }
-        if (!chemicalOutputTargets.isEmpty() && !outputTank.isEmpty()) {
-            ChemicalUtil.emit(getActiveOutputs(chemicalOutputTargets), outputTank);
-        }
         lastReceivedEnergy = receivedEnergy;
         receivedEnergy = 0L;
         lastProcessed = processed;
@@ -126,7 +135,7 @@ public class TileEntityCompactSPS extends TileEntityConfigurableMachine {
         inputProcessed += MathUtils.clampToInt(processed);
         final int inputPerAntimatter = MekanismConfig.general.spsInputPerAntimatter.get();
         if (inputProcessed >= inputPerAntimatter) {
-            ChemicalStack toAdd = MekanismGases.ANTIMATTER.getStack(inputProcessed / inputPerAntimatter);
+            ChemicalStack toAdd = MekanismChemicals.ANTIMATTER.asStack(inputProcessed / inputPerAntimatter);
             outputTank.insert(toAdd, Action.EXECUTE, AutomationType.INTERNAL);
             inputProcessed %= inputPerAntimatter;
         }
@@ -152,28 +161,23 @@ public class TileEntityCompactSPS extends TileEntityConfigurableMachine {
     @Override
     public void loadAdditional(@NotNull CompoundTag nbt, @NotNull HolderLookup.Provider provider) {
         super.loadAdditional(nbt, provider);
-        NBTUtils.setDoubleIfPresent(nbt, NBTConstants.PROGRESS, val -> progress = val);
-        NBTUtils.setIntIfPresent(nbt, NBTConstants.PROCESSED, val -> inputProcessed = val);
-        NBTUtils.setBooleanIfPresent(nbt, NBTConstants.COULD_OPERATE, val -> couldOperate = val);
-        NBTUtils.setFloatingLongIfPresent(nbt, NBTConstants.ENERGY_USAGE, val -> receivedEnergy = val);
-        NBTUtils.setDoubleIfPresent(nbt, NBTConstants.LAST_PROCESSED, val -> lastProcessed = val);
+        NBTUtils.setDoubleIfPresent(nbt, SerializationConstants.PROGRESS, val -> progress = val);
+        NBTUtils.setIntIfPresent(nbt, SerializationConstants.PROCESSED, val -> inputProcessed = val);
+        NBTUtils.setBooleanIfPresent(nbt, SerializationConstants.COULD_OPERATE, val -> couldOperate = val);
+        NBTUtils.setLegacyEnergyIfPresent(nbt, SerializationConstants.ENERGY_USAGE, val -> receivedEnergy = val);
+        NBTUtils.setDoubleIfPresent(nbt, SerializationConstants.LAST_PROCESSED, val -> lastProcessed = val);
 
     }
 
-    //セーブ系統
     @Override
-    public void loadAdditonal(@NotNull CompoundTag nbtTags) {
-        }
+    public void saveAdditional(@NotNull CompoundTag nbtTags, @NotNull HolderLookup.Provider provider) {
+        super.saveAdditional(nbtTags, provider);
 
-    @Override
-    public void saveAdditional(@NotNull CompoundTag nbtTags) {
-        super.saveAdditional(nbtTags);
-
-        nbtTags.putDouble(NBTConstants.PROGRESS, progress);
-        nbtTags.putInt(NBTConstants.PROCESSED, inputProcessed);
-        nbtTags.putBoolean(NBTConstants.COULD_OPERATE, couldOperate);
-        nbtTags.putString(NBTConstants.ENERGY_USAGE, receivedEnergy.toString());
-        nbtTags.putDouble(NBTConstants.LAST_PROCESSED, lastProcessed);
+        nbtTags.putDouble(SerializationConstants.PROGRESS, progress);
+        nbtTags.putInt(SerializationConstants.PROCESSED, inputProcessed);
+        nbtTags.putBoolean(SerializationConstants.COULD_OPERATE, couldOperate);
+        nbtTags.putLong(SerializationConstants.ENERGY_USAGE, receivedEnergy);
+        nbtTags.putDouble(SerializationConstants.LAST_PROCESSED, lastProcessed);
     }
 
     //以下初期化
@@ -185,24 +189,26 @@ public class TileEntityCompactSPS extends TileEntityConfigurableMachine {
         return builder.build();
     }
 
-    @NotNull
     @Override
-    public IChemicalTankHolder<Gas, GasStack, IGasTank> getInitialGasTanks(IContentsListener listener) {
-        ChemicalTankHelper<Gas, GasStack, IGasTank> builder = ChemicalTankHelper.forSideGasWithConfig(this::getDirection,this::getConfig);
-        builder.addTank(inputTank = ChemicalTankBuilder.GAS.create(
-                MekanismConfig.general.spsInputPerAntimatter.get() * 2L,
-                ChemicalTankBuilder.GAS.notExternal,
-                ChemicalTankBuilder.GAS.alwaysTrueBi,
-                gas -> gas == MekanismGases.POLONIUM.get(),
-                ChemicalAttributeValidator.ALWAYS_ALLOW,
+    public @Nullable IChemicalTankHolder getInitialChemicalTanks(IContentsListener listener) {
+        ChemicalTankHelper builder = ChemicalTankHelper.forSideWithConfig(this);
+
+        inputTank = VariableCapacityChemicalTank.create(
+                this::getMaxInputGas,
+                ConstantPredicates.alwaysFalseBi(),
+                ConstantPredicates.alwaysTrueBi(),
+                chemicalStack -> chemicalStack.is(MekanismChemicals.POLONIUM),
                 listener
-        ));
+        );
+        outputTank =
+
+        builder.addTank(inputTank);
 
         builder.addTank(outputTank = VariableCapacityChemicalTankBuilder.GAS.output(() -> MekanismConfig.general.spsOutputTankCapacity.get(), gas -> gas == MekanismGases.ANTIMATTER.get() ,listener));
         return builder.build();
     }
 
-    public  IEnergyContainer getEnergyContainer() {
+    public IEnergyContainer getEnergyContainer() {
         return energyContainer;
     }
 }
