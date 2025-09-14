@@ -2,14 +2,11 @@ package com.nanaios.CompactMekanismMachinesPlus.common.tile;
 
 import com.nanaios.CompactMekanismMachinesPlus.common.registries.CompactPlusBlocks;
 import mekanism.api.*;
-import mekanism.api.chemical.BasicChemicalTank;
 import mekanism.api.chemical.ChemicalStack;
 import mekanism.api.chemical.IChemicalTank;
-import mekanism.api.chemical.attribute.ChemicalAttributeValidator;
 import mekanism.api.energy.IEnergyContainer;
 import mekanism.api.functions.ConstantPredicates;
 import mekanism.api.math.MathUtils;
-import mekanism.common.attachments.containers.chemical.ChemicalTanksBuilder;
 import mekanism.common.capabilities.chemical.VariableCapacityChemicalTank;
 import mekanism.common.capabilities.energy.MachineEnergyContainer;
 import mekanism.common.capabilities.holder.chemical.ChemicalTankHelper;
@@ -26,7 +23,6 @@ import mekanism.common.tile.component.config.slot.ChemicalSlotInfo;
 import mekanism.common.tile.component.config.slot.EnergySlotInfo;
 import mekanism.common.tile.prefab.TileEntityConfigurableMachine;
 import mekanism.common.inventory.container.sync.dynamic.ContainerSync;
-import mekanism.common.util.ChemicalUtil;
 import mekanism.common.util.NBTUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
@@ -34,8 +30,6 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.function.Predicate;
 
 public class TileEntityCompactSPS extends TileEntityConfigurableMachine {
 
@@ -56,8 +50,6 @@ public class TileEntityCompactSPS extends TileEntityConfigurableMachine {
     public double lastProcessed;
 
     public boolean couldOperate;
-
-    Predicate<ChemicalStack> validator = chemicalStack -> chemicalStack.is(MekanismChemicals.POLONIUM);
 
     public TileEntityCompactSPS(BlockPos pos, BlockState state) {
         super(CompactPlusBlocks.COMPACT_SPS, pos, state);
@@ -184,7 +176,7 @@ public class TileEntityCompactSPS extends TileEntityConfigurableMachine {
     @NotNull
     @Override
     protected IEnergyContainerHolder getInitialEnergyContainers(IContentsListener listener) {
-        EnergyContainerHelper builder = EnergyContainerHelper.forSideWithConfig(this::getDirection,this::getConfig);
+        EnergyContainerHelper builder = EnergyContainerHelper.forSideWithConfig(this);
         builder.addContainer(energyContainer = MachineEnergyContainer.input(this, listener));
         return builder.build();
     }
