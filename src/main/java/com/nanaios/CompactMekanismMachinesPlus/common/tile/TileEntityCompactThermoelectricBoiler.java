@@ -1,21 +1,17 @@
 package com.nanaios.CompactMekanismMachinesPlus.common.tile;
 
-import com.nanaios.CompactMekanismMachinesPlus.common.CompactMekanismMachinesPlus;
 import com.nanaios.CompactMekanismMachinesPlus.common.CompactPlusNBTConstants;
 import com.nanaios.CompactMekanismMachinesPlus.common.registries.CompactPlusBlocks;
 import mekanism.api.*;
-import mekanism.api.chemical.ChemicalTankBuilder;
-import mekanism.api.chemical.attribute.ChemicalAttributeValidator;
-import mekanism.api.chemical.gas.Gas;
-import mekanism.api.chemical.gas.GasStack;
-import mekanism.api.chemical.gas.IGasTank;
-import mekanism.api.chemical.gas.attribute.GasAttributes.CooledCoolant;
-import mekanism.api.chemical.gas.attribute.GasAttributes.HeatedCoolant;
+import mekanism.api.chemical.ChemicalStack;
+import mekanism.api.chemical.IChemicalTank;
+import mekanism.api.chemical.attribute.ChemicalAttributes;
+import mekanism.api.datamaps.IMekanismDataMapTypes;
+import mekanism.api.datamaps.chemical.attribute.HeatedCoolant;
+import mekanism.api.functions.ConstantPredicates;
 import mekanism.api.heat.HeatAPI;
-import mekanism.api.heat.IHeatCapacitor;
-import mekanism.api.math.FloatingLong;
 import mekanism.api.math.MathUtils;
-import mekanism.common.capabilities.chemical.variable.VariableCapacityChemicalTankBuilder;
+import mekanism.common.capabilities.chemical.VariableCapacityChemicalTank;
 import mekanism.common.capabilities.fluid.VariableCapacityFluidTank;
 import mekanism.common.capabilities.heat.CachedAmbientTemperature;
 import mekanism.common.capabilities.heat.VariableHeatCapacitor;
@@ -26,11 +22,8 @@ import mekanism.common.capabilities.holder.fluid.IFluidTankHolder;
 import mekanism.common.capabilities.holder.heat.HeatCapacitorHelper;
 import mekanism.common.capabilities.holder.heat.IHeatCapacitorHolder;
 import mekanism.common.config.MekanismConfig;
-import mekanism.common.inventory.container.sync.dynamic.ContainerSync;
 import mekanism.common.lib.transmitter.TransmissionType;
-import mekanism.common.registries.MekanismGases;
-import mekanism.common.tags.MekanismTags;
-import mekanism.common.tile.component.TileComponentConfig;
+import mekanism.common.registries.MekanismChemicals;
 import mekanism.common.tile.component.TileComponentEjector;
 import mekanism.common.tile.component.config.ConfigInfo;
 import mekanism.common.tile.component.config.DataType;
@@ -42,74 +35,44 @@ import mekanism.common.util.HeatUtils;
 import mekanism.common.util.MekanismUtils;
 import mekanism.common.util.NBTUtils;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.tags.FluidTags;
 import net.minecraft.util.Mth;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import mekanism.common.content.boiler.BoilerMultiblockData;
-
 import java.util.List;
 
-public class TileEntityCompactThermoelectricBoiler extends TileEntityConfigurableMachine {
-    //public static final Object2BooleanMap<UUID> hotMap = new Object2BooleanOpenHashMap<>();
+import static mekanism.common.content.boiler.BoilerMultiblockData.IS_COOLED_COOLANT;
+import static mekanism.common.content.boiler.BoilerMultiblockData.IS_HEATED_COOLANT;
 
+public class TileEntityCompactThermoelectricBoiler extends TileEntityConfigurableMachine {
     public static final double CASING_HEAT_CAPACITY = 50;
     private static final double CASING_INVERSE_INSULATION_COEFFICIENT = 100_000;
     private static final double CASING_INVERSE_CONDUCTION_COEFFICIENT = 1;
 
-    private static final double COOLANT_COOLING_EFFICIENCY = 0.4;
-
-    //ボイラーの底面積。18 * 18
     public static final int BOILER_BASE_AREA = 324;
-    //ボイラーの高さ
     public static final int BOILER_HEIGHT = 18;
 
     public static final int MAX_DISPERSERS_Y = BOILER_HEIGHT - 1;
     public static final int MIN_DISPERSERS_Y = 2;
 
-    @ContainerSync
-    public IGasTank superheatedCoolantTank;
-
-    @ContainerSync
-    public IGasTank cooledCoolantTank;
-
-    @ContainerSync
+    public IChemicalTank superheatedCoolantTank;
+    public IChemicalTank cooledCoolantTank;
     public VariableCapacityFluidTank waterTank;
-
-    @ContainerSync
-    public IGasTank steamTank;
-
-    @ContainerSync
+    public IChemicalTank steamTank;
     public VariableHeatCapacitor heatCapacitor;
 
     private final double biomeAmbientTemp;
-
-    @ContainerSync
     public double lastEnvironmentLoss;
 
-    @ContainerSync
-    public int lastBoilRate;
+    public int lastBoilRate, lastMaxBoil;
 
-    @ContainerSync
-    public int lastMaxBoil;
+    public int superHeatingElements,dispersersY,maxSuperHeatingElements;
 
-    @ContainerSync
-    public int superHeatingElements;
-
-    @ContainerSync
-    public int dispersersY;
-
-    @ContainerSync
-    public int maxSuperHeatingElements;
-
-    @ContainerSync(setter = "setWaterVolume")
-    private int waterVolume;
-
-    @ContainerSync(setter = "setSteamVolume")
-    private int steamVolume;
+    private int waterVolume, steamVolume;
 
     private int waterTankCapacity;
     private long superheatedCoolantCapacity, steamTankCapacity, cooledCoolantCapacity;
@@ -126,15 +89,13 @@ public class TileEntityCompactThermoelectricBoiler extends TileEntityConfigurabl
         setWaterVolume((BOILER_BASE_AREA * (dispersersY - 1)  - superHeatingElements));
         setSteamVolume(BOILER_BASE_AREA * (BOILER_HEIGHT - dispersersY));
 
-        biomeAmbientTemp = HeatAPI.getAmbientTemp(this.getLevel(), this.getTilePos());
+        biomeAmbientTemp = HeatAPI.getAmbientTemp(this.getLevel(), this.getBlockPos());
 
-        configComponent = new TileComponentConfig(this,TransmissionType.GAS,TransmissionType.FLUID,TransmissionType.HEAT);
-
-        ConfigInfo gasConfig = configComponent.getConfig(TransmissionType.GAS);
+        ConfigInfo gasConfig = configComponent.getConfig(TransmissionType.CHEMICAL);
         if(gasConfig != null) {
-            gasConfig.addSlotInfo(DataType.INPUT,new ChemicalSlotInfo.GasSlotInfo(true,false,superheatedCoolantTank));
-            gasConfig.addSlotInfo(DataType.OUTPUT_1,new ChemicalSlotInfo.GasSlotInfo(false,true,cooledCoolantTank));
-            gasConfig.addSlotInfo(DataType.OUTPUT_2,new ChemicalSlotInfo.GasSlotInfo(false,true,steamTank));
+            gasConfig.addSlotInfo(DataType.INPUT,new ChemicalSlotInfo(true,false,superheatedCoolantTank));
+            gasConfig.addSlotInfo(DataType.OUTPUT_1,new ChemicalSlotInfo(false,true,cooledCoolantTank));
+            gasConfig.addSlotInfo(DataType.OUTPUT_2,new ChemicalSlotInfo(false,true,steamTank));
 
             gasConfig.setDataType(DataType.INPUT, RelativeSide.LEFT);
             gasConfig.setDataType(DataType.OUTPUT_1, RelativeSide.BOTTOM);
@@ -146,7 +107,9 @@ public class TileEntityCompactThermoelectricBoiler extends TileEntityConfigurabl
         ConfigInfo fluidConfig =configComponent.getConfig(TransmissionType.FLUID);
         if(fluidConfig != null) {
             fluidConfig.addSlotInfo(DataType.INPUT,new FluidSlotInfo(true,false,waterTank));
-            fluidConfig.setDataType(DataType.INPUT,RelativeSide.values());
+            for (RelativeSide side: RelativeSide.values()) {
+                fluidConfig.setDataType(DataType.INPUT,side);
+            }
 
             fluidConfig.setCanEject(false);
         }
@@ -154,20 +117,38 @@ public class TileEntityCompactThermoelectricBoiler extends TileEntityConfigurabl
         ConfigInfo heatConfig = configComponent.getConfig(TransmissionType.HEAT);
         if(heatConfig != null) {
             heatConfig.addSlotInfo(DataType.INPUT,new HeatSlotInfo(true,false, List.of(heatCapacitor)));
-            heatConfig.setDataType(DataType.INPUT,RelativeSide.values());
+            for (RelativeSide side: RelativeSide.values()) {
+                heatConfig.setDataType(DataType.INPUT,side);
+            }
 
             heatConfig.setCanEject(false);
         }
 
-        ejectorComponent = new TileComponentEjector(this,() -> Long.MAX_VALUE,() -> Integer.MAX_VALUE, () -> FloatingLong.MAX_VALUE);
-        ejectorComponent.setOutputData(configComponent,TransmissionType.GAS,TransmissionType.FLUID);
-        ejectorComponent.setCanEject(type ->  MekanismUtils.canFunction(this));
+        ejectorComponent = new TileComponentEjector(this,() -> Long.MAX_VALUE,() -> Integer.MAX_VALUE, () ->Long.MAX_VALUE);
+        ejectorComponent.setOutputData(configComponent,TransmissionType.CHEMICAL,TransmissionType.FLUID);
+        ejectorComponent.setCanTankEject(tank -> (tank == steamTank) || (tank == cooledCoolantTank));
+    }
 
+    @Nullable
+    @SuppressWarnings("removal")
+    private HeatedCoolant getHeatedCoolant() {
+        ChemicalStack stack = superheatedCoolantTank.getStack();
+        if (stack.isEmpty()) {
+            return null;
+        }
+        HeatedCoolant coolant = stack.getData(IMekanismDataMapTypes.INSTANCE.heatedChemicalCoolant());
+        if (coolant == null) {
+            ChemicalAttributes.HeatedCoolant legacyCoolant = stack.getLegacy(ChemicalAttributes.HeatedCoolant.class);
+            if (legacyCoolant != null) {
+                return legacyCoolant.asModern();
+            }
+        }
+        return coolant;
     }
 
     @Override
-    public void onUpdateServer() {
-        super.onUpdateServer();
+    public boolean onUpdateServer() {
+        boolean needsPacket = super.onUpdateServer();
         //hotMap.put(inventoryID, getTotalTemperature() >= HeatUtils.BASE_BOIL_TEMP - 0.01);
         // external heat dissipation
         lastEnvironmentLoss = simulateEnvironment();
@@ -175,29 +156,23 @@ public class TileEntityCompactThermoelectricBoiler extends TileEntityConfigurabl
         updateHeatCapacitors(null);
         // handle coolant heat transfer
         if (!superheatedCoolantTank.isEmpty()) {
-            superheatedCoolantTank.getStack().ifAttributePresent(HeatedCoolant.class, coolantType -> {
-                long toCool = 471449600;// = Math.round(TileEntityCompactThermoelectricBoiler.COOLANT_COOLING_EFFICIENCY * superheatedCoolantTank.getStored());
-
-                double nowTemp = heatCapacitor.getTemperature();
-
-                toCool = MathUtils.clampToLong(toCool * (1 - nowTemp/ HeatUtils.HEATED_COOLANT_TEMP));
-                GasStack cooledCoolant = coolantType.getCooledGas().getStack(toCool);
-                toCool = Math.min(toCool, toCool - cooledCoolantTank.insert(cooledCoolant, Action.EXECUTE, AutomationType.INTERNAL).getAmount());
-
-                cooledCoolantTank.onContentsChanged();
-
-                if (toCool > 0) {
-                    double heatEnergy = toCool * coolantType.getThermalEnthalpy();
+            HeatedCoolant coolantType = getHeatedCoolant();
+            if (coolantType != null) {
+                double portionToCool = coolantType.conductivity() * superheatedCoolantTank.getStored();
+                long toCool = Math.round(portionToCool * (1 - heatCapacitor.getTemperature() / coolantType.temperature()));
+                ChemicalStack cooledCoolant = coolantType.cool(toCool);
+                long amountCooled = toCool - cooledCoolantTank.insert(cooledCoolant, Action.EXECUTE, AutomationType.INTERNAL).getAmount();
+                if (amountCooled > 0) {
+                    double heatEnergy = amountCooled * coolantType.thermalEnthalpy();
                     heatCapacitor.handleHeat(heatEnergy);
-                    superheatedCoolantTank.shrinkStack(toCool, Action.EXECUTE);
+                    superheatedCoolantTank.shrinkStack(amountCooled, Action.EXECUTE);
                 }
-            });
+            }
         }
         // handle water heat transfer
         if (getTotalTemperature() >= HeatUtils.BASE_BOIL_TEMP && !waterTank.isEmpty()) {
-            setActive(true);
             double heatAvailable = getHeatAvailable();
-            lastMaxBoil = (int) Math.floor(HeatUtils.getSteamEnergyEfficiency() * heatAvailable / HeatUtils.getWaterThermalEnthalpy());
+            lastMaxBoil = Mth.floor(HeatUtils.getSteamEnergyEfficiency() * heatAvailable / HeatUtils.getWaterThermalEnthalpy());
 
             int amountToBoil = Math.min(lastMaxBoil, waterTank.getFluidAmount());
             amountToBoil = Math.min(amountToBoil, MathUtils.clampToInt(steamTank.getNeeded()));
@@ -205,7 +180,7 @@ public class TileEntityCompactThermoelectricBoiler extends TileEntityConfigurabl
                 waterTank.shrinkStack(amountToBoil, Action.EXECUTE);
             }
             if (steamTank.isEmpty()) {
-                steamTank.setStack(MekanismGases.STEAM.getStack(amountToBoil));
+                steamTank.setStack(MekanismChemicals.STEAM.asStack(amountToBoil));
             } else {
                 steamTank.growStack(amountToBoil, Action.EXECUTE);
             }
@@ -213,21 +188,20 @@ public class TileEntityCompactThermoelectricBoiler extends TileEntityConfigurabl
             heatCapacitor.handleHeat(-amountToBoil * HeatUtils.getWaterThermalEnthalpy() / HeatUtils.getSteamEnergyEfficiency());
             lastBoilRate = amountToBoil;
         } else {
-            setActive(false);
             lastBoilRate = 0;
             lastMaxBoil = 0;
         }
         float waterScale = MekanismUtils.getScale(prevWaterScale, waterTank);
-        if (waterScale != prevWaterScale) {
-            //needsPacket = true;
+        if (MekanismUtils.scaleChanged(waterScale, prevWaterScale)) {
+            needsPacket = true;
             prevWaterScale = waterScale;
         }
         float steamScale = MekanismUtils.getScale(prevSteamScale, steamTank);
-        if (steamScale != prevSteamScale) {
-            //needsPacket = true;
+        if (MekanismUtils.scaleChanged(steamScale, prevSteamScale)) {
+            needsPacket = true;
             prevSteamScale = steamScale;
         }
-        //return needsPacket;
+        return needsPacket;
     }
 
     private double getHeatAvailable() {
@@ -304,28 +278,24 @@ public class TileEntityCompactThermoelectricBoiler extends TileEntityConfigurabl
         return superHeatingElements;
     }
 
-    //以下保存系統
     @Override
-    public void load(@NotNull CompoundTag tag) {
+    public void loadAdditional(@NotNull CompoundTag nbt, @NotNull HolderLookup.Provider provider) {
+        super.loadAdditional(nbt, provider);
 
-        super.load(tag);
-        NBTUtils.setIntIfPresent(tag,CompactPlusNBTConstants.DISPERSERS_Y,this::setDispersersY);
-        NBTUtils.setIntIfPresent(tag,CompactPlusNBTConstants.SUPER_HEATING_ELEMENTS,this::setSuperHeatingElements);
-        NBTUtils.setFloatIfPresent(tag, NBTConstants.SCALE, scale -> prevWaterScale = scale);
-        NBTUtils.setFloatIfPresent(tag, NBTConstants.SCALE_ALT, scale -> prevSteamScale = scale);
-
-        //readValves(tag);
+        NBTUtils.setIntIfPresent(nbt,CompactPlusNBTConstants.DISPERSERS_Y,this::setDispersersY);
+        NBTUtils.setIntIfPresent(nbt,CompactPlusNBTConstants.SUPER_HEATING_ELEMENTS,this::setSuperHeatingElements);
+        NBTUtils.setFloatIfPresent(nbt, SerializationConstants.SCALE, scale -> prevWaterScale = scale);
+        NBTUtils.setFloatIfPresent(nbt, SerializationConstants.SCALE_ALT, scale -> prevSteamScale = scale);
     }
 
     @Override
-    public void saveAdditional(@NotNull CompoundTag tag) {
-        super.saveAdditional(tag);
-        tag.putInt(CompactPlusNBTConstants.DISPERSERS_Y,dispersersY);
-        tag.putInt(CompactPlusNBTConstants.SUPER_HEATING_ELEMENTS, superHeatingElements);
+    public void saveAdditional(@NotNull CompoundTag nbtTags, @NotNull HolderLookup.Provider provider) {
+        super.saveAdditional(nbtTags, provider);
+        nbtTags.putInt(CompactPlusNBTConstants.DISPERSERS_Y,dispersersY);
+        nbtTags.putInt(CompactPlusNBTConstants.SUPER_HEATING_ELEMENTS, superHeatingElements);
 
-        tag.putFloat(NBTConstants.SCALE, prevWaterScale);
-        tag.putFloat(NBTConstants.SCALE_ALT, prevSteamScale);
-        //writeValves(tag);
+        nbtTags.putFloat(SerializationConstants.SCALE, prevWaterScale);
+        nbtTags.putFloat(SerializationConstants.SCALE_ALT, prevSteamScale);
     }
 
     //以下パケット系統
@@ -338,41 +308,37 @@ public class TileEntityCompactThermoelectricBoiler extends TileEntityConfigurabl
         markForSave();
     }
 
-    @Override
-    public @Nullable IChemicalTankHolder getInitialChemicalTanks(IContentsListener listener) {
-        ChemicalTankHelper builder = ChemicalTankHelper.forSideWithConfig();
-    }
-
     //以下初期化系統
     @Override
-    public @Nullable IChemicalTankHolder<Gas, GasStack, IGasTank> getInitialGasTanks(IContentsListener listener) {
-        ChemicalTankHelper<Gas, GasStack, IGasTank> builder = ChemicalTankHelper.forSideGasWithConfig(this::getDirection,this::getConfig);
-        builder.addTank(superheatedCoolantTank = VariableCapacityChemicalTankBuilder.GAS.create(
+    public @Nullable IChemicalTankHolder getInitialChemicalTanks(IContentsListener listener) {
+        ChemicalTankHelper builder = ChemicalTankHelper.forSideWithConfig(this);
+
+        builder.addTank(superheatedCoolantTank = VariableCapacityChemicalTank.create(
                 () -> superheatedCoolantCapacity,
-                ChemicalTankBuilder.GAS.notExternal,
-                ChemicalTankBuilder.GAS.alwaysTrueBi,
-                gas -> gas.has(HeatedCoolant.class),
-                ChemicalAttributeValidator.ALWAYS_ALLOW,
+                ConstantPredicates.notExternal(),
+                ConstantPredicates.alwaysTrueBi(),
+                IS_HEATED_COOLANT,
                 listener
         ));
-        builder.addTank(cooledCoolantTank = VariableCapacityChemicalTankBuilder.GAS.output(
+        builder.addTank(cooledCoolantTank = VariableCapacityChemicalTank.output(
                 () -> cooledCoolantCapacity,
-                gas -> gas.has(CooledCoolant.class),
+                IS_COOLED_COOLANT,
                 listener
         ));
-        builder.addTank(steamTank = VariableCapacityChemicalTankBuilder.GAS.output(
+        builder.addTank(steamTank = VariableCapacityChemicalTank.output(
                 () -> steamTankCapacity,
-                gas -> gas == MekanismGases.STEAM.getChemical(),
+                chemical -> chemical.is(MekanismChemicals.STEAM),
                 listener
         ));
+
         return builder.build();
     }
 
     @NotNull
     @Override
     public IFluidTankHolder getInitialFluidTanks(IContentsListener listener){
-        FluidTankHelper builder = FluidTankHelper.forSideWithConfig(this::getConfig);
-        builder.addTank(waterTank = VariableCapacityFluidTank.input(() -> waterTankCapacity, fluid -> MekanismTags.Fluids.WATER_LOOKUP.contains(fluid.getFluid()), listener));
+        FluidTankHelper builder = FluidTankHelper.forSideWithConfig(this);
+        builder.addTank(waterTank = VariableCapacityFluidTank.input(() -> waterTankCapacity, fluid -> fluid.is(FluidTags.WATER), listener));
         return builder.build();
     }
 

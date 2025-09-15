@@ -4,6 +4,7 @@ import com.nanaios.CompactMekanismMachinesPlus.common.registries.CompactPlusBloc
 import mekanism.api.*;
 import mekanism.api.chemical.ChemicalStack;
 import mekanism.api.chemical.IChemicalTank;
+import mekanism.api.chemical.attribute.ChemicalAttributeValidator;
 import mekanism.api.energy.IEnergyContainer;
 import mekanism.api.functions.ConstantPredicates;
 import mekanism.api.math.MathUtils;
@@ -33,6 +34,7 @@ import org.jetbrains.annotations.Nullable;
 
 public class TileEntityCompactSPS extends TileEntityConfigurableMachine {
 
+
     public IChemicalTank inputTank;
 
     public IChemicalTank outputTank;
@@ -46,7 +48,6 @@ public class TileEntityCompactSPS extends TileEntityConfigurableMachine {
     public long receivedEnergy = 0L;
     public long lastReceivedEnergy = 0L;
 
-    @ContainerSync
     public double lastProcessed;
 
     public boolean couldOperate;
@@ -68,7 +69,7 @@ public class TileEntityCompactSPS extends TileEntityConfigurableMachine {
         if(energyConfig != null) {
             energyConfig.addSlotInfo(DataType.INPUT,new EnergySlotInfo(true,false,energyContainer));
 
-            for (RelativeSide side : RelativeSide.values()) {
+            for (RelativeSide side: RelativeSide.values()) {
                 energyConfig.setDataType(DataType.INPUT,side);
             }
         }
@@ -142,6 +143,10 @@ public class TileEntityCompactSPS extends TileEntityConfigurableMachine {
         return MekanismConfig.general.spsInputPerAntimatter.get() * 2L;
     }
 
+    private long getMaxOutputGas() {
+        return MekanismConfig.general.spsOutputTankCapacity.get();
+    }
+
     public double getProcessRate() {
         return Math.round((lastProcessed / MekanismConfig.general.spsInputPerAntimatter.get()) * 1_000) / 1_000D;
     }
@@ -185,26 +190,27 @@ public class TileEntityCompactSPS extends TileEntityConfigurableMachine {
     public @Nullable IChemicalTankHolder getInitialChemicalTanks(IContentsListener listener) {
         ChemicalTankHelper builder = ChemicalTankHelper.forSideWithConfig(this);
 
-        inputTank = VariableCapacityChemicalTank.create(
+        builder.addTank(inputTank = VariableCapacityChemicalTank.create(
                 this::getMaxInputGas,
-                ConstantPredicates.alwaysFalseBi(),
+                ConstantPredicates.notExternal(),
                 ConstantPredicates.alwaysTrueBi(),
                 gas -> gas.is(MekanismChemicals.POLONIUM),
+                ChemicalAttributeValidator.ALWAYS_ALLOW,
                 listener
-        );
-        outputTank =VariableCapacityChemicalTank.output(
-                MekanismConfig.general.spsOutputTankCapacity::get,
+        ));
+        builder.addTank(outputTank = VariableCapacityChemicalTank.create(
+                this::getMaxOutputGas,
+                ConstantPredicates.alwaysTrueBi(),
+                ConstantPredicates.notExternal(),
                 gas -> gas.is(MekanismChemicals.ANTIMATTER),
+                ChemicalAttributeValidator.ALWAYS_ALLOW,
                 listener
-        );
-
-        builder.addTank(inputTank);
-        builder.addTank(outputTank);
+        ));
 
         return builder.build();
     }
 
-    public IEnergyContainer getEnergyContainer() {
+    /* public IEnergyContainer getEnergyContainer() {
         return energyContainer;
-    }
+    } */
 }
