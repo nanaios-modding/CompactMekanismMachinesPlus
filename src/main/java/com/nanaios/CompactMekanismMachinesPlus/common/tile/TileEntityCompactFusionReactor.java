@@ -2,6 +2,8 @@ package com.nanaios.CompactMekanismMachinesPlus.common.tile;
 
 import com.nanaios.CompactMekanismMachinesPlus.common.registries.CompactPlusContainerTypes;
 import mekanism.api.*;
+import mekanism.api.chemical.IChemicalHandler;
+import mekanism.api.chemical.IChemicalTank;
 import mekanism.api.lasers.ILaserReceptor;
 import com.nanaios.CompactMekanismMachinesPlus.common.registries.CompactPlusBlocks;
 import mekanism.api.energy.IEnergyContainer;
@@ -9,7 +11,9 @@ import mekanism.api.fluid.IExtendedFluidTank;
 import mekanism.api.heat.HeatAPI;
 import mekanism.api.heat.IHeatCapacitor;
 import mekanism.api.math.MathUtils;
+import mekanism.common.attachments.containers.chemical.ChemicalTanksBuilder;
 import mekanism.common.capabilities.Capabilities;
+import mekanism.common.capabilities.chemical.VariableCapacityChemicalTank;
 import mekanism.common.capabilities.energy.MachineEnergyContainer;
 import mekanism.common.capabilities.fluid.VariableCapacityFluidTank;
 import mekanism.common.capabilities.heat.CachedAmbientTemperature;
@@ -30,8 +34,8 @@ import mekanism.common.inventory.container.sync.dynamic.ContainerSync;
 import mekanism.common.inventory.container.sync.dynamic.SyncMapper;
 import mekanism.common.inventory.slot.InputInventorySlot;
 import mekanism.common.lib.transmitter.TransmissionType;
+import mekanism.common.registries.MekanismChemicals;
 import mekanism.common.tags.MekanismTags;
-import mekanism.common.tile.component.TileComponentConfig;
 import mekanism.common.tile.component.TileComponentEjector;
 import mekanism.common.tile.component.config.ConfigInfo;
 import mekanism.common.tile.component.config.DataType;
@@ -42,15 +46,16 @@ import mekanism.common.tile.component.config.slot.InventorySlotInfo;
 import mekanism.common.tile.prefab.TileEntityConfigurableMachine;
 import mekanism.common.util.HeatUtils;
 import mekanism.common.util.MekanismUtils;
-import mekanism.common.util.WorldUtils;
+import mekanism.generators.common.GeneratorTags;
 import mekanism.generators.common.config.MekanismGeneratorsConfig;
 import mekanism.generators.common.item.ItemHohlraum;
+import mekanism.generators.common.registries.GeneratorsChemicals;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.tags.FluidTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
 
@@ -58,7 +63,6 @@ import mekanism.generators.common.content.fusion.FusionReactorMultiblockData;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.Nonnull;
-import java.util.Optional;
 
 public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachine implements ILaserReceptor {
 
@@ -66,12 +70,12 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
     public static final String FUEL_TAB =  FusionReactorMultiblockData.FUEL_TAB;
     public static final String STATS_TAB = FusionReactorMultiblockData.STATS_TAB;
 
-    public static final int MAX_INJECTION = 98;//this is the effective cap in the GUI, as text field is limited to 2 chars
+    //public static final int MAX_INJECTION = 98;//this is the effective cap in the GUI, as text field is limited to 2 chars
     //Reaction characteristics
     private static final double burnTemperature = 100_000_000;
     private static final double burnRatio = 1;
     //Thermal characteristics
-    private static final double plasmaHeatCapacity = 100;
+    private static final long plasmaHeatCapacity = 100;
     private static final double caseHeatCapacity = 1;
     private static final double inverseInsulation = 100_000;
     //Heat transfer metrics
@@ -81,7 +85,7 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
     public IExtendedFluidTank waterTank;
 
     @ContainerSync(tags = HEAT_TAB)
-    public IGasTank steamTank;
+    public IChemicalTank steamTank;
 
     @ContainerSync
     private boolean burning = false;
@@ -96,7 +100,7 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
     @ContainerSync(tags = HEAT_TAB)
     private double lastPlasmaTemperature;
 
-    private double biomeAmbientTemp;
+    private final double biomeAmbientTemp;
 
     @ContainerSync
     public double lastTransferLoss;
@@ -105,13 +109,13 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
     public double lastEnvironmentLoss;
 
     @ContainerSync(tags = FUEL_TAB)
-    public IGasTank deuteriumTank;
+    public IChemicalTank deuteriumTank;
 
     @ContainerSync(tags = FUEL_TAB)
-    public IGasTank tritiumTank;
+    public IChemicalTank tritiumTank;
 
     @ContainerSync(tags = FUEL_TAB)
-    public IGasTank fuelTank;
+    public IChemicalTank fuelTank;
 
     @ContainerSync(tags = {FUEL_TAB, HEAT_TAB, STATS_TAB}, getter = "getInjectionRate", setter = "setInjectionRate")
     private int injectionRate = 2;
@@ -131,21 +135,19 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
     public TileEntityCompactFusionReactor(BlockPos pos, BlockState state) {
         super(CompactPlusBlocks.COMPACT_FUSION_REACTOR, pos, state);
 
-        addCapabilityResolver(BasicCapabilityResolver.constant(Capabilities.LASER_RECEPTOR, this));
-
-        configComponent = new TileComponentConfig(this,TransmissionType.ITEM, TransmissionType.GAS,TransmissionType.FLUID,TransmissionType.ENERGY);
+        addCapabilityResolver(BasicCapabilityResolver.create(Capabilities.LASER_RECEPTOR,() -> this));
 
         biomeAmbientTemp = HeatAPI.getAmbientTemp(this.getLevel(),pos);
         lastPlasmaTemperature = biomeAmbientTemp;
         lastCaseTemperature = biomeAmbientTemp;
         plasmaTemperature = biomeAmbientTemp;
 
-        ConfigInfo gasConfig = configComponent.getConfig(TransmissionType.GAS);
+        ConfigInfo gasConfig = configComponent.getConfig(TransmissionType.CHEMICAL);
         if (gasConfig !=null){
-            gasConfig.addSlotInfo( DataType.INPUT, new ChemicalSlotInfo.GasSlotInfo(true,false, fuelTank));
-            gasConfig.addSlotInfo( DataType.INPUT_1, new ChemicalSlotInfo.GasSlotInfo(true,false, deuteriumTank));
-            gasConfig.addSlotInfo( DataType.INPUT_2, new ChemicalSlotInfo.GasSlotInfo(true,false, tritiumTank));
-            gasConfig.addSlotInfo( DataType.OUTPUT, new ChemicalSlotInfo.GasSlotInfo(false,true, steamTank));
+            gasConfig.addSlotInfo( DataType.INPUT, new ChemicalSlotInfo(true,false, fuelTank));
+            gasConfig.addSlotInfo( DataType.INPUT_1, new ChemicalSlotInfo(true,false, deuteriumTank));
+            gasConfig.addSlotInfo( DataType.INPUT_2, new ChemicalSlotInfo(true,false, tritiumTank));
+            gasConfig.addSlotInfo( DataType.OUTPUT, new ChemicalSlotInfo(false,true, steamTank));
             gasConfig.setDataType(DataType.INPUT, RelativeSide.TOP);
             gasConfig.setDataType(DataType.INPUT_1, RelativeSide.LEFT);
             gasConfig.setDataType(DataType.INPUT_2, RelativeSide.RIGHT);
@@ -156,14 +158,19 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
         ConfigInfo energyConfig = configComponent.getConfig(TransmissionType.ENERGY);
         if(energyConfig != null) {
             energyConfig.addSlotInfo(DataType.OUTPUT,new EnergySlotInfo(false,true,energyContainer));
-            energyConfig.setDataType(DataType.OUTPUT,RelativeSide.values());
+            for (RelativeSide side : RelativeSide.values()) {
+                energyConfig.setDataType(DataType.OUTPUT,side);
+            }
+
             energyConfig.setEjecting(true);
         }
 
         ConfigInfo fluidConfig = configComponent.getConfig(TransmissionType.FLUID);
         if(fluidConfig != null) {
             fluidConfig.addSlotInfo(DataType.INPUT,new FluidSlotInfo(true,false,waterTank));
-            fluidConfig.setDataType(DataType.INPUT,RelativeSide.values());
+            for (RelativeSide side : RelativeSide.values()) {
+                fluidConfig.setDataType(DataType.INPUT,side);
+            }
 
             fluidConfig.setCanEject(false);
         }
@@ -171,24 +178,25 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
         ConfigInfo itemConfig = configComponent.getConfig(TransmissionType.ITEM);
         if(itemConfig != null) {
             itemConfig.addSlotInfo(DataType.INPUT,new InventorySlotInfo(true,false,reactorSlot));
-            itemConfig.setDataType(DataType.INPUT,RelativeSide.values());
+            for (RelativeSide side : RelativeSide.values()) {
+                itemConfig.setDataType(DataType.INPUT,side);
+            }
+
 
             itemConfig.setCanEject(false);
         }
 
-        ejectorComponent = new TileComponentEjector(this, ()->Long.MAX_VALUE,()->Integer.MAX_VALUE,()-> FloatingLong.create(Long.MAX_VALUE));
-        ejectorComponent.setOutputData(configComponent,TransmissionType.GAS,TransmissionType.ENERGY);
-        ejectorComponent.setCanEject(type -> MekanismUtils.canFunction(this));
+        ejectorComponent = new TileComponentEjector(this, ()->Long.MAX_VALUE,()->Integer.MAX_VALUE,()-> Long.MAX_VALUE);
+        ejectorComponent.setOutputData(configComponent,TransmissionType.CHEMICAL,TransmissionType.ENERGY);
+        ejectorComponent.setCanTankEject(tank -> tank == steamTank);
+        ejectorComponent.setCanEject(type -> canFunction());
     }
 
     //update系統
 
     @Override
-    public void onUpdateServer() {
-        super.onUpdateServer();
-
-        //injectWater();
-
+    public boolean onUpdateServer() {
+        boolean needsPacket = super.onUpdateServer();
         long fuelBurned = 0;
         //Only thermal transfer happens unless we're hot enough to burn.
         if (getPlasmaTemp() >= burnTemperature) {
@@ -199,17 +207,13 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
 
             //Only inject fuel if we're burning
             if (isBurning()) {
-                setActive(true);
                 injectFuel();
                 fuelBurned = burnFuel();
                 if (fuelBurned == 0) {
                     setBurning(false);
                 }
-            } else {
-                setActive(false);
             }
         } else {
-            setActive(false);
             setBurning(false);
         }
 
@@ -222,12 +226,17 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
         updateHeatCapacitors(null);
         updateTemperatures();
 
-
-
         if (isBurning() != clientBurning || Math.abs(getLastPlasmaTemp() - clientTemp) > 1_000_000) {
             clientBurning = isBurning();
             clientTemp = getLastPlasmaTemp();
+            needsPacket = true;
         }
+        return needsPacket;
+    }
+
+    @Override
+    public void receiveLaserEnergy(long energy) {
+        this.addTemperatureFromEnergyInput(energy);
     }
 
     //以下レーザメソッド系統
@@ -235,20 +244,13 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
     public boolean canLasersDig() {
         return false;
     }
-
-    @Override
-    public void receiveLaserEnergy(@NotNull FloatingLong energy) {
-        this.addTemperatureFromEnergyInput(energy);
-    }
-
-
     //以下融合炉メソッド
 
-    public void addTemperatureFromEnergyInput(FloatingLong energyAdded) {
+    public void addTemperatureFromEnergyInput(long energyAdded) {
         if (isBurning()) {
-            setPlasmaTemp(getPlasmaTemp() + energyAdded.divide(plasmaHeatCapacity).doubleValue());
+            setPlasmaTemp(getPlasmaTemp() + (double) energyAdded / plasmaHeatCapacity);
         } else {
-            setPlasmaTemp(getPlasmaTemp() + energyAdded.divide(plasmaHeatCapacity).multiply(10).doubleValue());
+            setPlasmaTemp(getPlasmaTemp() + (double) energyAdded / plasmaHeatCapacity *10);
         }
     }
 
@@ -261,13 +263,10 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
         if (!reactorSlot.isEmpty()) {
             ItemStack hohlraum = reactorSlot.getStack();
             if (hohlraum.getItem() instanceof ItemHohlraum) {
-                Optional<IGasHandler> capability = hohlraum.getCapability(Capabilities.GAS_HANDLER).resolve();
-                if (capability.isPresent()) {
-                    IGasHandler gasHandlerItem = capability.get();
-                    if (gasHandlerItem.getTanks() > 0) {
-                        //Validate something didn't go terribly wrong, and we actually do have the tank we expect to have
-                        return gasHandlerItem.getChemicalInTank(0).getAmount() == gasHandlerItem.getTankCapacity(0);
-                    }
+                IChemicalHandler gasHandlerItem = Capabilities.CHEMICAL.getCapability(hohlraum);
+                if (gasHandlerItem != null && gasHandlerItem.getChemicalTanks() > 0) {
+                    //Validate something didn't go terribly wrong, and we actually do have the tank we expect to have
+                    return gasHandlerItem.getChemicalInTank(0).getAmount() == gasHandlerItem.getChemicalTankCapacity(0);
                 }
             }
         }
@@ -282,54 +281,37 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
         long injectingAmount = amountToInject / 2;
         MekanismUtils.logMismatchedStackSize(deuteriumTank.shrinkStack(injectingAmount, Action.EXECUTE), injectingAmount);
         MekanismUtils.logMismatchedStackSize(tritiumTank.shrinkStack(injectingAmount, Action.EXECUTE), injectingAmount);
-        fuelTank.insert(GeneratorsGases.FUSION_FUEL.getStack(amountToInject), Action.EXECUTE, AutomationType.INTERNAL);
+        fuelTank.insert(GeneratorsChemicals.FUSION_FUEL.asStack(amountToInject), Action.EXECUTE, AutomationType.INTERNAL);
     }
 
     private void vaporiseHohlraum() {
         ItemStack hohlraum = reactorSlot.getStack();
-        Optional<IGasHandler> capability = hohlraum.getCapability(Capabilities.GAS_HANDLER).resolve();
-        if (capability.isPresent()) {
-            IGasHandler gasHandlerItem = capability.get();
-            if (gasHandlerItem.getTanks() > 0) {
-                fuelTank.insert(gasHandlerItem.getChemicalInTank(0), Action.EXECUTE, AutomationType.INTERNAL);
-
-                lastPlasmaTemperature = getPlasmaTemp();
-
-                reactorSlot.setEmpty();
-                setBurning(true);
-            }
+        IChemicalHandler gasHandlerItem = Capabilities.CHEMICAL.getCapability(hohlraum);
+        if (gasHandlerItem != null && gasHandlerItem.getChemicalTanks() > 0) {
+            fuelTank.insert(gasHandlerItem.getChemicalInTank(0), Action.EXECUTE, AutomationType.INTERNAL);
+            lastPlasmaTemperature = getPlasmaTemp();
+            reactorSlot.setEmpty();
+            setBurning(true);
         }
     }
 
     public void setBurning(boolean burn) {
         if (burning != burn) {
             burning = burn;
-            //markDirty();
         }
     }
 
     private long burnFuel() {
         long fuelBurned = MathUtils.clampToLong(Mth.clamp((lastPlasmaTemperature - burnTemperature) * burnRatio, 0, fuelTank.getStored()));
         MekanismUtils.logMismatchedStackSize(fuelTank.shrinkStack(fuelBurned, Action.EXECUTE), fuelBurned);
-        setPlasmaTemp(getPlasmaTemp() + MekanismGeneratorsConfig.generators.energyPerFusionFuel.get().multiply(fuelBurned).divide(plasmaHeatCapacity).doubleValue());
-
-        Level world = getLevel();
-
-        if(world !=null && MekanismUtils.canFunction(this)) {
-            BlockPos pos = this.getBlockPos().below(2);
-            BlockEntity entity = WorldUtils.getTileEntity(world, pos);
-            if(entity instanceof TileEntityFusionNeutronActivator tile) {
-                tile.setFuelBurned(fuelBurned);
-            }
-        }
-
+        setPlasmaTemp(getPlasmaTemp() + (MathUtils.multiplyClamped(MekanismGeneratorsConfig.generators.energyPerFusionFuel.get(), fuelBurned) / (double)plasmaHeatCapacity));
         return fuelBurned;
     }
 
 
-    public FloatingLong getPassiveGeneration(boolean active, boolean current) {
+    public long getPassiveGeneration(boolean active, boolean current) {
         double temperature = current ? getLastCaseTemp() : getMaxCasingTemperature(active);
-        return FloatingLong.create(MekanismGeneratorsConfig.generators.fusionThermocoupleEfficiency.get() *
+        return MathUtils.clampToLong(MekanismGeneratorsConfig.generators.fusionThermocoupleEfficiency.get() *
                 MekanismGeneratorsConfig.generators.fusionCasingThermalConductivity.get() * temperature);
     }
 
@@ -340,29 +322,33 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
     public double getMaxCasingTemperature(boolean active) {
         double k = active ? MekanismGeneratorsConfig.generators.fusionWaterHeatingRatio.get() : 0;
         long injectionRate = Math.max(this.injectionRate, lastBurned);
-        return MekanismGeneratorsConfig.generators.energyPerFusionFuel.get().multiply(injectionRate)
-                .divide(k + MekanismGeneratorsConfig.generators.fusionCasingThermalConductivity.get()).doubleValue();
+        return MathUtils.multiplyClamped(MekanismGeneratorsConfig.generators.energyPerFusionFuel.get(), injectionRate)
+                / (k + MekanismGeneratorsConfig.generators.fusionCasingThermalConductivity.get());
     }
 
     public int getMinInjectionRate(boolean active) {
-        double k = active ? MekanismGeneratorsConfig.generators.fusionWaterHeatingRatio.get() : 0.0;
+        double k = active ? MekanismGeneratorsConfig.generators.fusionWaterHeatingRatio.get() : 0;
         double caseAirConductivity = MekanismGeneratorsConfig.generators.fusionCasingThermalConductivity.get();
-        double aMin = 2.0E7 * (k + caseAirConductivity) / (((FloatingLong)MekanismGeneratorsConfig.generators.energyPerFusionFuel.get()).doubleValue() * 1.0 * (0.2 + k + caseAirConductivity) - 0.2 * (k + caseAirConductivity));
-        return (int)(2.0 * Math.ceil(aMin / 2.0));
+        double aMin = burnTemperature * burnRatio * plasmaCaseConductivity * (k + caseAirConductivity) /
+                (MekanismGeneratorsConfig.generators.energyPerFusionFuel.get() * burnRatio * (plasmaCaseConductivity + k + caseAirConductivity) -
+                        plasmaCaseConductivity * (k + caseAirConductivity));
+        return 2 * Mth.ceil(aMin / 2D);
     }
 
     public double getMaxPlasmaTemperature(boolean active) {
-        double k = active ? MekanismGeneratorsConfig.generators.fusionWaterHeatingRatio.get() : 0.0;
+        double k = active ? MekanismGeneratorsConfig.generators.fusionWaterHeatingRatio.get() : 0;
         double caseAirConductivity = MekanismGeneratorsConfig.generators.fusionCasingThermalConductivity.get();
-        long injectionRate = Math.max((long)this.injectionRate, this.lastBurned);
-        return (double)injectionRate * ((FloatingLong)MekanismGeneratorsConfig.generators.energyPerFusionFuel.get()).doubleValue() / 0.2 * (0.2 + k + caseAirConductivity) / (k + caseAirConductivity);
+        long injectionRate = Math.max(this.injectionRate, lastBurned);
+        return injectionRate * MekanismGeneratorsConfig.generators.energyPerFusionFuel.get() / plasmaCaseConductivity *
+                (plasmaCaseConductivity + k + caseAirConductivity) / (k + caseAirConductivity);
     }
 
     public double getIgnitionTemperature(boolean active) {
-        double k = active ? MekanismGeneratorsConfig.generators.fusionWaterHeatingRatio.get() : 0.0;
+        double k = active ? MekanismGeneratorsConfig.generators.fusionWaterHeatingRatio.get() : 0;
         double caseAirConductivity = MekanismGeneratorsConfig.generators.fusionCasingThermalConductivity.get();
-        double energyPerFusionFuel = ((FloatingLong)MekanismGeneratorsConfig.generators.energyPerFusionFuel.get()).doubleValue();
-        return 1.0E8 * energyPerFusionFuel * 1.0 * (0.2 + k + caseAirConductivity) / (energyPerFusionFuel * 1.0 * (0.2 + k + caseAirConductivity) - 0.2 * (k + caseAirConductivity));
+        double energyPerFusionFuel = MekanismGeneratorsConfig.generators.energyPerFusionFuel.get();
+        return burnTemperature * energyPerFusionFuel * burnRatio * (plasmaCaseConductivity + k + caseAirConductivity) /
+                (energyPerFusionFuel * burnRatio * (plasmaCaseConductivity + k + caseAirConductivity) - plasmaCaseConductivity * (k + caseAirConductivity));
     }
 
     private void transferHeat() {
@@ -375,13 +361,12 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
 
         //Transfer from casing to water if necessary
         double caseWaterHeat = MekanismGeneratorsConfig.generators.fusionWaterHeatingRatio.get() * (lastCaseTemperature - biomeAmbientTemp);
-
         if (Math.abs(caseWaterHeat) > HeatAPI.EPSILON) {
             int waterToVaporize = (int) (HeatUtils.getSteamEnergyEfficiency() * caseWaterHeat / HeatUtils.getWaterThermalEnthalpy());
             waterToVaporize = Math.min(waterToVaporize, Math.min(waterTank.getFluidAmount(), MathUtils.clampToInt(steamTank.getNeeded())));
             if (waterToVaporize > 0) {
                 MekanismUtils.logMismatchedStackSize(waterTank.shrinkStack(waterToVaporize, Action.EXECUTE), waterToVaporize);
-                steamTank.insert(MekanismGases.STEAM.getStack(waterToVaporize), Action.EXECUTE, AutomationType.INTERNAL);
+                steamTank.insert(MekanismChemicals.STEAM.asStack(waterToVaporize), Action.EXECUTE, AutomationType.INTERNAL);
                 caseWaterHeat = waterToVaporize * HeatUtils.getWaterThermalEnthalpy() / HeatUtils.getSteamEnergyEfficiency();
                 heatCapacitor.handleHeat(-caseWaterHeat);
             }
@@ -395,7 +380,7 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
         double caseAirHeat = MekanismGeneratorsConfig.generators.fusionCasingThermalConductivity.get() * (lastCaseTemperature - biomeAmbientTemp);
         if (Math.abs(caseAirHeat) > HeatAPI.EPSILON) {
             heatCapacitor.handleHeat(-caseAirHeat);
-            energyContainer.insert(FloatingLong.create(caseAirHeat * MekanismGeneratorsConfig.generators.fusionThermocoupleEfficiency.get()), Action.EXECUTE, AutomationType.INTERNAL);
+            energyContainer.insert(MathUtils.clampToLong(caseAirHeat * MekanismGeneratorsConfig.generators.fusionThermocoupleEfficiency.get()), Action.EXECUTE, AutomationType.INTERNAL);
         }
     }
 
@@ -467,13 +452,31 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
 
     //以下初期化系メソッド
 
+
     @Override
-    public @Nullable IChemicalTankHolder<Gas, GasStack, IGasTank> getInitialGasTanks(IContentsListener listener) {
-        ChemicalTankHelper<Gas, GasStack, IGasTank> builder = ChemicalTankHelper.forSideGasWithConfig(this::getDirection,this::getConfig);
-        builder.addTank(deuteriumTank = ChemicalTankBuilder.GAS.input(MekanismGeneratorsConfig.generators.fusionFuelCapacity.get(), gas -> gas == GeneratorsGases.DEUTERIUM.getChemical(),listener));
-        builder.addTank(tritiumTank = ChemicalTankBuilder.GAS.input(MekanismGeneratorsConfig.generators.fusionFuelCapacity.get(), gas -> gas == GeneratorsGases.TRITIUM.getChemical(),listener));
-        builder.addTank(fuelTank = ChemicalTankBuilder.GAS.input(MekanismGeneratorsConfig.generators.fusionFuelCapacity.get(), gas -> gas == GeneratorsGases.FUSION_FUEL.getChemical(),createSaveAndComparator()));
-        builder.addTank(steamTank = VariableCapacityChemicalTankBuilder.GAS.output(this::getMaxSteam,gas ->gas == MekanismGases.STEAM.getChemical(),listener));
+    public @Nullable IChemicalTankHolder getInitialChemicalTanks(IContentsListener listener) {
+        ChemicalTankHelper builder = ChemicalTankHelper.forSideWithConfig(this);
+
+        builder.addTank(deuteriumTank = VariableCapacityChemicalTank.input(
+                MekanismGeneratorsConfig.generators.fusionFuelCapacity.get(),
+                chemical -> chemical.is(GeneratorTags.Chemicals.DEUTERIUM),
+                this
+        ));
+        builder.addTank(tritiumTank = VariableCapacityChemicalTank.input(
+                MekanismGeneratorsConfig.generators.fusionFuelCapacity.get(),
+                chemical -> chemical.is(GeneratorTags.Chemicals.TRITIUM),
+                this
+        ));
+        builder.addTank(fuelTank = VariableCapacityChemicalTank.input(
+                MekanismGeneratorsConfig.generators.fusionFuelCapacity.get(),
+                chemical -> chemical.is(GeneratorTags.Chemicals.FUSION_FUEL),
+                this
+        ));
+        builder.addTank(steamTank = VariableCapacityChemicalTank.output(
+                this::getMaxSteam,
+                chemical -> chemical.is(MekanismChemicals.STEAM),
+                this
+        ));
 
         return builder.build();
     }
@@ -481,8 +484,14 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
     @NotNull
     @Override
     public IFluidTankHolder getInitialFluidTanks(IContentsListener listener){
-        FluidTankHelper builder = FluidTankHelper.forSideWithConfig(this::getDirection,this::getConfig);
-        builder.addTank(waterTank = VariableCapacityFluidTank.input( this::getMaxWater, fluid -> MekanismTags.Fluids.WATER_LOOKUP.contains(fluid.getFluid()), this));
+        FluidTankHelper builder = FluidTankHelper.forSideWithConfig(this);
+
+        builder.addTank(waterTank = VariableCapacityFluidTank.input(
+                this::getMaxWater,
+                fluid -> fluid.is(FluidTags.WATER),
+                this
+        ));
+
         return builder.build();
     }
 
@@ -495,7 +504,7 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
     @NotNull
     @Override
     protected IEnergyContainerHolder getInitialEnergyContainers(IContentsListener listener) {
-        EnergyContainerHelper builder = EnergyContainerHelper.forSideWithConfig(this::getDirection,this::getConfig);
+        EnergyContainerHelper builder = EnergyContainerHelper.forSideWithConfig(this);
         builder.addContainer(energyContainer = MachineEnergyContainer.output(MekanismGeneratorsConfig.generators.fusionEnergyCapacity.get(),listener));
         return builder.build();
     }
@@ -503,34 +512,37 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
     @Nonnull
     @Override
     protected IInventorySlotHolder getInitialInventory(IContentsListener listener) {
-        InventorySlotHelper builder = InventorySlotHelper.forSideWithConfig(this::getDirection,this::getConfig);
+        InventorySlotHelper builder = InventorySlotHelper.forSideWithConfig(this);
         builder.addSlot(reactorSlot = InputInventorySlot.at(stack -> stack.getItem() instanceof ItemHohlraum, listener, 80, 39));
         return builder.build();
     }
 
     //セーブ系統
 
+
     @Override
-    public void load(@NotNull CompoundTag nbtTags) {
-        super.load(nbtTags);
+    public void loadAdditional(@NotNull CompoundTag nbt, @NotNull HolderLookup.Provider provider) {
+        super.loadAdditional(nbt, provider);
+
         //温度の更新
-        setPlasmaTemp(nbtTags.getDouble(NBTConstants.PLASMA_TEMP));
+        setPlasmaTemp(nbt.getDouble(SerializationConstants.PLASMA_TEMP));
         updateTemperatures();
 
         //点火状態更新
-        setBurning(nbtTags.getBoolean(NBTConstants.BURNING));
+        setBurning(nbt.getBoolean(SerializationConstants.BURNING));
 
         //注入レート更新
-        setInjectionRate(nbtTags.getInt(NBTConstants.INJECTION_RATE));
+        setInjectionRate(nbt.getInt(SerializationConstants.INJECTION_RATE));
     }
 
     @Override
-    public void saveAdditional(CompoundTag nbtTags) {
-        super.saveAdditional(nbtTags);
-        nbtTags.putDouble(NBTConstants.PLASMA_TEMP, plasmaTemperature);
-        nbtTags.putInt(NBTConstants.INJECTION_RATE, getInjectionRate());
-        nbtTags.putBoolean(NBTConstants.BURNING, burning);
+    public void saveAdditional(@NotNull CompoundTag nbtTags, @NotNull HolderLookup.Provider provider) {
+        super.saveAdditional(nbtTags, provider);
+        nbtTags.putDouble(SerializationConstants.PLASMA_TEMP, plasmaTemperature);
+        nbtTags.putInt(SerializationConstants.INJECTION_RATE, getInjectionRate());
+        nbtTags.putBoolean(SerializationConstants.BURNING, burning);
     }
+
 
     //その他
 
@@ -555,13 +567,7 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
     }
 
     protected IContentsListener createSaveAndComparator(IContentsListener contentsListener) {
-        return () -> {
-            contentsListener.onContentsChanged();
-            /* if (!this.isRemote()) {
-                this.markDirtyComparator();
-            } */
-
-        };
+        return contentsListener;
     }
 
     public  IEnergyContainer getEnergyContainer() {

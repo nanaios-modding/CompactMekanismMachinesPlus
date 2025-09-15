@@ -22,6 +22,7 @@ import mekanism.common.capabilities.holder.fluid.IFluidTankHolder;
 import mekanism.common.capabilities.holder.heat.HeatCapacitorHelper;
 import mekanism.common.capabilities.holder.heat.IHeatCapacitorHolder;
 import mekanism.common.config.MekanismConfig;
+import mekanism.common.inventory.container.sync.dynamic.ContainerSync;
 import mekanism.common.lib.transmitter.TransmissionType;
 import mekanism.common.registries.MekanismChemicals;
 import mekanism.common.tile.component.TileComponentEjector;
@@ -59,10 +60,19 @@ public class TileEntityCompactThermoelectricBoiler extends TileEntityConfigurabl
     public static final int MAX_DISPERSERS_Y = BOILER_HEIGHT - 1;
     public static final int MIN_DISPERSERS_Y = 2;
 
+    @ContainerSync
     public IChemicalTank superheatedCoolantTank;
+
+    @ContainerSync
     public IChemicalTank cooledCoolantTank;
+
+    @ContainerSync
     public VariableCapacityFluidTank waterTank;
+
+    @ContainerSync
     public IChemicalTank steamTank;
+
+    @ContainerSync
     public VariableHeatCapacitor heatCapacitor;
 
     private final double biomeAmbientTemp;

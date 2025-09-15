@@ -34,9 +34,10 @@ import org.jetbrains.annotations.Nullable;
 
 public class TileEntityCompactSPS extends TileEntityConfigurableMachine {
 
-
+    @ContainerSync
     public IChemicalTank inputTank;
 
+    @ContainerSync
     public IChemicalTank outputTank;
 
     private IEnergyContainer energyContainer;
