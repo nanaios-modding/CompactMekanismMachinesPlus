@@ -1,6 +1,5 @@
 package com.nanaios.CompactMekanismMachinesPlus.client.gui.element;
 
-import com.nanaios.CompactMekanismMachinesPlus.common.CompactMekanismMachinesPlus;
 import com.nanaios.CompactMekanismMachinesPlus.common.network.to_server.PacketCompactPlusTileButtonPress;
 import com.nanaios.CompactMekanismMachinesPlus.common.network.to_server.PacketCompactPlusTileButtonPress.ClickedCompactPlusTileButton;
 import com.nanaios.CompactMekanismMachinesPlus.common.tile.TileEntityCompactFusionReactor;
@@ -10,6 +9,7 @@ import mekanism.client.gui.IGuiWrapper;
 import mekanism.client.gui.element.tab.GuiTabElementType;
 import mekanism.client.gui.element.tab.TabType;
 import mekanism.client.render.lib.ColorAtlas.ColorRegistryObject;
+import mekanism.common.network.PacketUtils;
 import mekanism.common.util.MekanismUtils;
 import mekanism.common.util.MekanismUtils.ResourceType;
 import mekanism.generators.client.GeneratorsSpecialColors;
@@ -50,7 +50,7 @@ public class GuiFusionReactorTab extends GuiTabElementType<TileEntityCompactFusi
         }
 
         public void onClick(TileEntityCompactFusionReactor tile) {
-            CompactMekanismMachinesPlus.packetHandler().sendToServer(new PacketCompactPlusTileButtonPress(button, tile.getBlockPos()));
+            PacketUtils.sendToServer(new PacketCompactPlusTileButtonPress(button, tile.getBlockPos()));
         }
 
         @Override

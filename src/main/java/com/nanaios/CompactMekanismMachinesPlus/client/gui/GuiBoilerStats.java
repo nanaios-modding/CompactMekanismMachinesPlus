@@ -21,7 +21,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import org.jetbrains.annotations.NotNull;
 
-public class GuiBoilerStats extends GuiMekanismTile<TileEntityCompactThermoelectricBoiler, EmptyTileContainer<TileEntityCompactThermoelectricBoiler>> {
+public class GuiBoilerStats extends GuiBoilerInfo{
 
     private GuiLongGraph boilGraph;
     private GuiLongGraph maxGraph;

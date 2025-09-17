@@ -3,6 +3,7 @@ package com.nanaios.CompactMekanismMachinesPlus.client.gui;
 import java.util.Collections;
 import java.util.List;
 
+import com.nanaios.CompactMekanismMachinesPlus.client.gui.element.ILegacyFontRenderer;
 import com.nanaios.CompactMekanismMachinesPlus.common.tile.TileEntityCompactThermoelectricBoiler;
 import com.nanaios.CompactMekanismMachinesPlus.client.gui.element.GuiBoilerTab;
 import com.nanaios.CompactMekanismMachinesPlus.client.gui.element.GuiBoilerTab.BoilerTab;
@@ -12,12 +13,11 @@ import mekanism.client.gui.element.GuiInnerScreen;
 import mekanism.client.gui.element.bar.GuiBar.IBarInfoHandler;
 import mekanism.client.gui.element.bar.GuiVerticalRateBar;
 import mekanism.client.gui.element.gauge.GaugeType;
+import mekanism.client.gui.element.gauge.GuiChemicalGauge;
 import mekanism.client.gui.element.gauge.GuiFluidGauge;
-import mekanism.client.gui.element.gauge.GuiGasGauge;
 import mekanism.client.gui.element.tab.GuiHeatTab;
 import mekanism.client.gui.element.tab.window.GuiSideConfigurationTab;
-import mekanism.client.gui.element.tab.window.GuiTransporterConfigTab;
-import mekanism.client.jei.MekanismJEIRecipeType;
+import mekanism.client.recipe_viewer.type.RecipeViewerRecipeType;
 import mekanism.common.MekanismLang;
 import mekanism.common.config.MekanismConfig;
 import mekanism.common.inventory.container.tile.MekanismTileContainer;
@@ -30,9 +30,9 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import org.jetbrains.annotations.NotNull;
 
-public class GuiThermoelectricBoiler extends GuiConfigurableTile<TileEntityCompactThermoelectricBoiler, MekanismTileContainer<TileEntityCompactThermoelectricBoiler>> {
+public class GuiBoilerMain extends GuiConfigurableTile<TileEntityCompactThermoelectricBoiler, MekanismTileContainer<TileEntityCompactThermoelectricBoiler>> implements ILegacyFontRenderer {
 
-    public GuiThermoelectricBoiler(MekanismTileContainer<TileEntityCompactThermoelectricBoiler> container, Inventory inv, Component title) {
+    public GuiBoilerMain(MekanismTileContainer<TileEntityCompactThermoelectricBoiler> container, Inventory inv, Component title) {
         super(container, inv, title);
         dynamicSlots = true;
         imageWidth += 40;
@@ -43,10 +43,8 @@ public class GuiThermoelectricBoiler extends GuiConfigurableTile<TileEntityCompa
     @Override
     protected void addGuiElements() {
         super.addGuiElements();
-        addRenderableWidget(new GuiInnerScreen(this, 60, 23, 96, 40, () -> {
-            return List.of(MekanismLang.TEMPERATURE.translate(MekanismUtils.getTemperatureDisplay(tile.getTotalTemperature(), TemperatureUnit.KELVIN, true)),
-                  MekanismLang.BOIL_RATE.translate(TextUtils.format(tile.lastBoilRate)), MekanismLang.MAX_BOIL_RATE.translate(TextUtils.format(tile.lastMaxBoil)));
-        }).jeiCategories(MekanismJEIRecipeType.BOILER));
+        addRenderableWidget(new GuiInnerScreen(this, 54, 23, 110, 40, () -> List.of(MekanismLang.TEMPERATURE.translate(MekanismUtils.getTemperatureDisplay(tile.getTotalTemperature(), TemperatureUnit.KELVIN, true)),
+                MekanismLang.BOIL_RATE.translate(TextUtils.format(tile.lastBoilRate)), MekanismLang.MAX_BOIL_RATE.translate(TextUtils.format(tile.lastMaxBoil)))).padding(3).recipeViewerCategories(RecipeViewerRecipeType.BOILER));
         addRenderableWidget(new GuiBoilerTab(this, tile, BoilerTab.STAT));
         addRenderableWidget(new GuiBoilerTab(this, tile, BoilerTab.CONFIG));
         addRenderableWidget(new GuiVerticalRateBar(this, new IBarInfoHandler() {
@@ -72,13 +70,13 @@ public class GuiThermoelectricBoiler extends GuiConfigurableTile<TileEntityCompa
                                    (tile.superHeatingElements * MekanismConfig.general.superheatingHeatTransfer.get()));
             }
         }, 164, 13));
-        addRenderableWidget(new GuiGasGauge(() -> tile.superheatedCoolantTank, () -> tile.getGasTanks(null), GaugeType.STANDARD, this, 6, 13)
+        addRenderableWidget(new GuiChemicalGauge(() -> tile.superheatedCoolantTank, () -> tile.getChemicalTanks(null), GaugeType.STANDARD, this, 6, 13)
               .setLabel(MekanismLang.BOILER_HEATED_COOLANT_TANK.translateColored(EnumColor.ORANGE)));
         addRenderableWidget(new GuiFluidGauge(() -> tile.waterTank, () -> tile.getFluidTanks(null), GaugeType.STANDARD, this, 26, 13)
               .setLabel(MekanismLang.BOILER_WATER_TANK.translateColored(EnumColor.INDIGO)));
-        addRenderableWidget(new GuiGasGauge(() -> tile.steamTank, () -> tile.getGasTanks(null), GaugeType.STANDARD, this, 172, 13)
+        addRenderableWidget(new GuiChemicalGauge(() -> tile.steamTank, () -> tile.getChemicalTanks(null), GaugeType.STANDARD, this, 172, 13)
               .setLabel(MekanismLang.BOILER_STEAM_TANK.translateColored(EnumColor.GRAY)));
-        addRenderableWidget(new GuiGasGauge(() -> tile.cooledCoolantTank, () -> tile.getGasTanks(null), GaugeType.STANDARD, this, 192, 13)
+        addRenderableWidget(new GuiChemicalGauge(() -> tile.cooledCoolantTank, () -> tile.getChemicalTanks(null), GaugeType.STANDARD, this, 192, 13)
               .setLabel(MekanismLang.BOILER_COOLANT_TANK.translateColored(EnumColor.AQUA)));
         addRenderableWidget(new GuiHeatTab(this, () -> {
             Component environment = MekanismUtils.getTemperatureDisplay(tile.lastEnvironmentLoss, TemperatureUnit.KELVIN, false);

@@ -9,14 +9,12 @@ import mekanism.client.gui.element.GuiInnerScreen;
 import mekanism.client.gui.element.bar.GuiBar.IBarInfoHandler;
 import mekanism.client.gui.element.bar.GuiDynamicHorizontalRateBar;
 import mekanism.client.gui.element.gauge.GaugeType;
-import mekanism.client.gui.element.gauge.GuiGasGauge;
-import mekanism.client.jei.MekanismJEIRecipeType;
+import mekanism.client.gui.element.gauge.GuiChemicalGauge;
+import mekanism.client.recipe_viewer.type.RecipeViewerRecipeType;
 import mekanism.common.MekanismLang;
-import mekanism.common.content.sps.SPSMultiblockData;
 import mekanism.common.inventory.container.tile.MekanismTileContainer;
 import mekanism.common.lib.Color;
 import mekanism.common.lib.Color.ColorFunction;
-import mekanism.common.tile.multiblock.TileEntitySPSCasing;
 import mekanism.common.util.text.EnergyDisplay;
 import mekanism.common.util.text.TextUtils;
 import net.minecraft.client.gui.GuiGraphics;
@@ -36,18 +34,14 @@ public class GuiSPS extends GuiConfigurableTile<TileEntityCompactSPS, MekanismTi
     @Override
     protected void addGuiElements() {
         super.addGuiElements();
-        addRenderableWidget(new GuiGasGauge(() -> tile.inputTank, () -> tile.getGasTanks(null), GaugeType.STANDARD, this, 7, 17));
-        addRenderableWidget(new GuiGasGauge(() -> tile.outputTank, () -> tile.getGasTanks(null), GaugeType.STANDARD, this, 151, 17));
+        addRenderableWidget(new GuiChemicalGauge(() -> tile.inputTank, () -> tile.getChemicalTanks(null), GaugeType.STANDARD, this, 7, 17));
+        addRenderableWidget(new GuiChemicalGauge(() -> tile.outputTank, () -> tile.getChemicalTanks(null), GaugeType.STANDARD, this, 151, 17));
         addRenderableWidget(new GuiInnerScreen(this, 27, 17, 122, 60, () -> {
             List<Component> list = new ArrayList<>();
-            boolean active = tile.lastProcessed > 0;
-            list.add(MekanismLang.STATUS.translate(active ? MekanismLang.ACTIVE : MekanismLang.IDLE));
-            if (active) {
-                list.add(MekanismLang.SPS_ENERGY_INPUT.translate(EnergyDisplay.of(tile.lastReceivedEnergy)));
-                list.add(MekanismLang.PROCESS_RATE_MB.translate(tile.getProcessRate()));
-            }
+            list.add(MekanismLang.SPS_ENERGY_INPUT.translate(EnergyDisplay.of(tile.lastReceivedEnergy)));
+            list.add(MekanismLang.PROCESS_RATE_MB.translate(tile.getProcessRate()));
             return list;
-        }).jeiCategories(MekanismJEIRecipeType.SPS));
+        }).recipeViewerCategories(RecipeViewerRecipeType.SPS));
         addRenderableWidget(new GuiDynamicHorizontalRateBar(this, new IBarInfoHandler() {
             @Override
             public Component getTooltip() {
@@ -64,7 +58,7 @@ public class GuiSPS extends GuiConfigurableTile<TileEntityCompactSPS, MekanismTi
     @Override
     protected void drawForegroundText(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY) {
         renderTitleText(guiGraphics);
-        drawString(guiGraphics, playerInventoryTitle, inventoryLabelX, inventoryLabelY, titleTextColor());
+        renderInventoryText(guiGraphics);
         super.drawForegroundText(guiGraphics, mouseX, mouseY);
     }
 }

@@ -4,14 +4,14 @@ import com.nanaios.CompactMekanismMachinesPlus.client.gui.element.GuiFusionReact
 import com.nanaios.CompactMekanismMachinesPlus.client.gui.element.GuiFusionReactorTab.FusionReactorTab;
 import com.nanaios.CompactMekanismMachinesPlus.common.network.to_server.PacketCompactPlusGuiInteract.CompactPlusGuiInteraction;
 import com.nanaios.CompactMekanismMachinesPlus.common.network.to_server.PacketCompactPlusGuiInteract;
-import com.nanaios.CompactMekanismMachinesPlus.common.CompactMekanismMachinesPlus;
 import com.nanaios.CompactMekanismMachinesPlus.common.tile.TileEntityCompactFusionReactor;
 import mekanism.client.gui.element.gauge.GaugeType;
-import mekanism.client.gui.element.gauge.GuiGasGauge;
+import mekanism.client.gui.element.gauge.GuiChemicalGauge;
 import mekanism.client.gui.element.progress.GuiProgress;
 import mekanism.client.gui.element.progress.ProgressType;
 import mekanism.client.gui.element.text.GuiTextField;
 import mekanism.common.inventory.container.tile.EmptyTileContainer;
+import mekanism.common.network.PacketUtils;
 import mekanism.common.util.text.InputValidator;
 import mekanism.generators.common.GeneratorsLang;
 import net.minecraft.client.gui.GuiGraphics;
@@ -30,9 +30,9 @@ public class GuiFusionReactorFuel extends GuiFusionReactorInfo {
     @Override
     protected void addGuiElements() {
         super.addGuiElements();
-        addRenderableWidget(new GuiGasGauge(() -> tile.deuteriumTank, () -> tile.getGasTanks(null), GaugeType.SMALL, this, 25, 64));
-        addRenderableWidget(new GuiGasGauge(() -> tile.fuelTank, () -> tile.getGasTanks(null), GaugeType.STANDARD, this, 79, 50));
-        addRenderableWidget(new GuiGasGauge(() -> tile.tritiumTank, () -> tile.getGasTanks(null), GaugeType.SMALL, this, 133, 64));
+        addRenderableWidget(new GuiChemicalGauge(() -> tile.deuteriumTank, () -> tile.getChemicalTanks(null), GaugeType.SMALL, this, 25, 64));
+        addRenderableWidget(new GuiChemicalGauge(() -> tile.fuelTank, () -> tile.getChemicalTanks(null), GaugeType.STANDARD, this, 79, 50));
+        addRenderableWidget(new GuiChemicalGauge(() -> tile.tritiumTank, () -> tile.getChemicalTanks(null), GaugeType.SMALL, this, 133, 64));
         addRenderableWidget(new GuiProgress(() -> tile.isBurning(), ProgressType.SMALL_RIGHT, this, 47, 76));
         addRenderableWidget(new GuiProgress(() -> tile.isBurning(), ProgressType.SMALL_LEFT, this, 101, 76));
         addRenderableWidget(new GuiFusionReactorTab(this, tile, FusionReactorTab.HEAT));
@@ -47,14 +47,14 @@ public class GuiFusionReactorFuel extends GuiFusionReactorInfo {
     @Override
     protected void drawForegroundText(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY) {
         renderTitleText(guiGraphics);
-        drawCenteredText(guiGraphics, GeneratorsLang.REACTOR_INJECTION_RATE.translate(tile.getInjectionRate()), 0, imageWidth, 35, titleTextColor());
-        drawString(guiGraphics, GeneratorsLang.REACTOR_EDIT_RATE.translate(), 50, 117, titleTextColor());
+        drawScrollingString(guiGraphics, GeneratorsLang.REACTOR_INJECTION_RATE.translate(tile.getInjectionRate()), 0, 35, TextAlignment.CENTER, titleTextColor(), 16, false);
+        drawScrollingString(guiGraphics, GeneratorsLang.REACTOR_EDIT_RATE.translate(), 4, 117, TextAlignment.RIGHT, titleTextColor(), 99, 2, false);
         super.drawForegroundText(guiGraphics, mouseX, mouseY);
     }
 
     private void setInjection() {
         if (!injectionRateField.getText().isEmpty()) {
-            CompactMekanismMachinesPlus.packetHandler().sendToServer(new PacketCompactPlusGuiInteract(CompactPlusGuiInteraction.INJECTION_RATE, tile, Integer.parseInt(injectionRateField.getText())));
+            PacketUtils.sendToServer(new PacketCompactPlusGuiInteract(CompactPlusGuiInteraction.INJECTION_RATE, tile, Integer.parseInt(injectionRateField.getText())));
             injectionRateField.setText("");
         }
     }

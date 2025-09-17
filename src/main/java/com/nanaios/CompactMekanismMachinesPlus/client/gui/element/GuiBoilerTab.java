@@ -1,6 +1,5 @@
 package com.nanaios.CompactMekanismMachinesPlus.client.gui.element;
 
-import com.nanaios.CompactMekanismMachinesPlus.common.CompactMekanismMachinesPlus;
 import com.nanaios.CompactMekanismMachinesPlus.common.network.to_server.PacketCompactPlusTileButtonPress;
 import com.nanaios.CompactMekanismMachinesPlus.common.network.to_server.PacketCompactPlusTileButtonPress.ClickedCompactPlusTileButton;
 import com.nanaios.CompactMekanismMachinesPlus.common.tile.TileEntityCompactThermoelectricBoiler;
@@ -12,12 +11,13 @@ import mekanism.client.gui.element.tab.GuiTabElementType;
 import mekanism.client.gui.element.tab.TabType;
 import mekanism.client.render.lib.ColorAtlas.ColorRegistryObject;
 import mekanism.common.MekanismLang;
+import mekanism.common.network.PacketUtils;
 import mekanism.common.util.MekanismUtils;
 import mekanism.common.util.MekanismUtils.ResourceType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
-public class GuiBoilerTab extends GuiTabElementType<TileEntityCompactThermoelectricBoiler, BoilerTab> {
+public class GuiBoilerTab extends GuiTabElementType<TileEntityCompactThermoelectricBoiler, BoilerTab>{
 
     public GuiBoilerTab(IGuiWrapper gui, TileEntityCompactThermoelectricBoiler tile, BoilerTab type) {
         super(gui, tile, type);
@@ -49,7 +49,7 @@ public class GuiBoilerTab extends GuiTabElementType<TileEntityCompactThermoelect
 
         @Override
         public void onClick(TileEntityCompactThermoelectricBoiler tile) {
-            CompactMekanismMachinesPlus.packetHandler().sendToServer(new PacketCompactPlusTileButtonPress(button, tile.getBlockPos()));
+            PacketUtils.sendToServer(new PacketCompactPlusTileButtonPress(button, tile.getBlockPos()));
         }
 
         @Override

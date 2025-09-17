@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.nanaios.CompactMekanismMachinesPlus.client.gui.element.GuiFusionReactorTab;
 import com.nanaios.CompactMekanismMachinesPlus.client.gui.element.GuiFusionReactorTab.FusionReactorTab;
+import com.nanaios.CompactMekanismMachinesPlus.client.gui.element.ILegacyFontRenderer;
 import com.nanaios.CompactMekanismMachinesPlus.common.CompactPlusLang;
 import com.nanaios.CompactMekanismMachinesPlus.common.tile.TileEntityCompactFusionReactor;
 import mekanism.client.gui.GuiConfigurableTile;
@@ -22,7 +23,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import org.jetbrains.annotations.NotNull;
 
-public class GuiFusionReactorController extends GuiConfigurableTile<TileEntityCompactFusionReactor, MekanismTileContainer<TileEntityCompactFusionReactor>> {
+public class GuiFusionReactorController extends GuiConfigurableTile<TileEntityCompactFusionReactor, MekanismTileContainer<TileEntityCompactFusionReactor>> implements ILegacyFontRenderer {
 
     public GuiFusionReactorController(MekanismTileContainer<TileEntityCompactFusionReactor> container, Inventory inv, Component title) {
         super(container, inv, title);

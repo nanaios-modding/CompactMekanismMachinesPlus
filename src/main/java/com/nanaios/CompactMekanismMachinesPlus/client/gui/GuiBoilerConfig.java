@@ -10,6 +10,7 @@ import mekanism.client.gui.element.tab.GuiHeatTab;
 import mekanism.client.gui.element.text.GuiTextField;
 import mekanism.common.MekanismLang;
 import mekanism.common.inventory.container.tile.EmptyTileContainer;
+import mekanism.common.network.PacketUtils;
 import mekanism.common.util.MekanismUtils;
 import mekanism.common.util.UnitDisplayUtils;
 import mekanism.common.util.text.InputValidator;
@@ -21,8 +22,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
 
-public class GuiBoilerConfig extends GuiMekanismTile<TileEntityCompactThermoelectricBoiler, EmptyTileContainer<TileEntityCompactThermoelectricBoiler>> {
-
+public class GuiBoilerConfig extends GuiBoilerInfo{
     private GuiTextField superHeatingElementsField;
     private GuiTextField dispersersYField;
 
@@ -67,13 +67,13 @@ public class GuiBoilerConfig extends GuiMekanismTile<TileEntityCompactThermoelec
 
     private void setSuperHeatingElements() {
         if(!superHeatingElementsField.getText().isEmpty()) {
-            CompactMekanismMachinesPlus.packetHandler().sendToServer(new PacketCompactPlusGuiInteract(PacketCompactPlusGuiInteract.CompactPlusGuiInteraction.SUPER_HEATING_ELEMENTS, tile, Integer.parseInt(superHeatingElementsField.getText())));
+            PacketUtils.sendToServer(new PacketCompactPlusGuiInteract(PacketCompactPlusGuiInteract.CompactPlusGuiInteraction.SUPER_HEATING_ELEMENTS, tile, Integer.parseInt(superHeatingElementsField.getText())));
             superHeatingElementsField.setText("");
         }
     }
     private void setDispersersY() {
         if(!dispersersYField.getText().isEmpty()) {
-            CompactMekanismMachinesPlus.packetHandler().sendToServer(new PacketCompactPlusGuiInteract(PacketCompactPlusGuiInteract.CompactPlusGuiInteraction.DISPERSERS_Y, tile, Integer.parseInt(dispersersYField.getText())));
+            PacketUtils.sendToServer(new PacketCompactPlusGuiInteract(PacketCompactPlusGuiInteract.CompactPlusGuiInteraction.DISPERSERS_Y, tile, Integer.parseInt(dispersersYField.getText())));
             dispersersYField.setText("");
         }
     }

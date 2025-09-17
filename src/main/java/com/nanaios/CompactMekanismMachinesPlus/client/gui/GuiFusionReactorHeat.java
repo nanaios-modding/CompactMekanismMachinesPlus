@@ -2,13 +2,8 @@ package com.nanaios.CompactMekanismMachinesPlus.client.gui;
 
 import com.nanaios.CompactMekanismMachinesPlus.client.gui.element.GuiFusionReactorTab;
 import com.nanaios.CompactMekanismMachinesPlus.client.gui.element.GuiFusionReactorTab.FusionReactorTab;
-import com.nanaios.CompactMekanismMachinesPlus.common.CompactMekanismMachinesPlus;
 import com.nanaios.CompactMekanismMachinesPlus.common.tile.TileEntityCompactFusionReactor;
-import mekanism.client.gui.element.gauge.GaugeType;
-import mekanism.client.gui.element.gauge.GuiEnergyGauge;
-import mekanism.client.gui.element.gauge.GuiFluidGauge;
-import mekanism.client.gui.element.gauge.GuiGasGauge;
-import mekanism.client.gui.element.gauge.GuiNumberGauge;
+import mekanism.client.gui.element.gauge.*;
 import mekanism.client.gui.element.gauge.GuiNumberGauge.INumberInfoHandler;
 import mekanism.client.gui.element.progress.GuiProgress;
 import mekanism.client.gui.element.progress.ProgressType;
@@ -87,7 +82,7 @@ public class GuiFusionReactorHeat extends GuiFusionReactorInfo {
             return tile.getCaseTemp() > 0 && !tile.waterTank.isEmpty() && tile.steamTank.getStored() < tile.steamTank.getCapacity();
         }, ProgressType.SMALL_RIGHT, this, 83, 91));
         addRenderableWidget(new GuiFluidGauge(() -> tile.waterTank, () -> tile.getFluidTanks(null), GaugeType.SMALL, this, 115, 84));
-        addRenderableWidget(new GuiGasGauge(() -> tile.steamTank, () -> tile.getGasTanks(null), GaugeType.SMALL, this, 151, 84));
+        addRenderableWidget(new GuiChemicalGauge(() -> tile.steamTank, () -> tile.getChemicalTanks(null), GaugeType.SMALL, this, 151, 84));
         addRenderableWidget(new GuiEnergyGauge(tile.energyContainer, GaugeType.SMALL, this, 115, 46));
         addRenderableWidget(new GuiFusionReactorTab(this, tile, FusionReactorTab.FUEL));
         addRenderableWidget(new GuiFusionReactorTab(this, tile, FusionReactorTab.STAT));
