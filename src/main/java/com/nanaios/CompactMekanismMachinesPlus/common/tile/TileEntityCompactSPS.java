@@ -86,14 +86,18 @@ public class TileEntityCompactSPS extends TileEntityConfigurableMachine {
     @Override
     protected boolean onUpdateServer() {
         boolean needsPacket = super.onUpdateServer();
+
+        receivedEnergy = energyContainer.extract(energyContainer.getEnergy(), Action.EXECUTE, AutomationType.INTERNAL);
+
         double processed = 0;
         couldOperate = canOperate();
         if (couldOperate && receivedEnergy > 0L) {
-            double lastProgress = progress;
+            //double lastProgress = progress;
             final int inputPerAntimatter = MekanismConfig.general.spsInputPerAntimatter.get();
             long inputNeeded = (inputPerAntimatter - inputProcessed) + inputPerAntimatter * (outputTank.getNeeded() - 1);
             double processable = (double) receivedEnergy / MekanismConfig.general.spsEnergyPerInput.get();
             if (processable + progress >= inputNeeded) {
+
                 processed = process(inputNeeded);
                 progress = 0;
             } else {
