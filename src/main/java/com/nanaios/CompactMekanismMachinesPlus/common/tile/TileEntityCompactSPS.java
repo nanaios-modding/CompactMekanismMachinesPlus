@@ -40,15 +40,21 @@ public class TileEntityCompactSPS extends TileEntityConfigurableMachine {
     @ContainerSync
     public IChemicalTank outputTank;
 
+    @ContainerSync
     private IEnergyContainer energyContainer;
 
+    @ContainerSync
     public double progress;
 
+    @ContainerSync
     public int inputProcessed = 0;
 
     public long receivedEnergy = 0L;
+
+    @ContainerSync
     public long lastReceivedEnergy = 0L;
 
+    @ContainerSync
     public double lastProcessed;
 
     public boolean couldOperate;
@@ -87,11 +93,13 @@ public class TileEntityCompactSPS extends TileEntityConfigurableMachine {
     protected boolean onUpdateServer() {
         boolean needsPacket = super.onUpdateServer();
 
-        receivedEnergy = energyContainer.extract(energyContainer.getEnergy(), Action.EXECUTE, AutomationType.INTERNAL);
+        receivedEnergy = energyContainer.extract(energyContainer.getEnergy(), Action.SIMULATE, AutomationType.INTERNAL);
 
         double processed = 0;
         couldOperate = canOperate();
         if (couldOperate && receivedEnergy > 0L) {
+            setActive(true);
+            receivedEnergy = energyContainer.extract(energyContainer.getEnergy(), Action.EXECUTE, AutomationType.INTERNAL);
             //double lastProgress = progress;
             final int inputPerAntimatter = MekanismConfig.general.spsInputPerAntimatter.get();
             long inputNeeded = (inputPerAntimatter - inputProcessed) + inputPerAntimatter * (outputTank.getNeeded() - 1);
@@ -113,6 +121,8 @@ public class TileEntityCompactSPS extends TileEntityConfigurableMachine {
                 }
                 progress %= 1;
             }
+        } else {
+            setActive(false);
         }
 
         if (receivedEnergy != lastReceivedEnergy || processed != lastProcessed) {
