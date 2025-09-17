@@ -13,8 +13,6 @@ import mekanism.generators.common.config.MekanismGeneratorsConfig;
 import mekanism.generators.common.content.blocktype.Generator;
 import mekanism.generators.common.registries.GeneratorsSounds;
 
-import java.util.EnumSet;
-
 public class CompactPlusBlockTypes {
     private CompactPlusBlockTypes() {}
 

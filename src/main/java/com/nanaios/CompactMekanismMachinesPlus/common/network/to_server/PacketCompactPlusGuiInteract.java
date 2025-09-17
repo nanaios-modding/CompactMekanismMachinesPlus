@@ -9,7 +9,6 @@ import mekanism.common.network.IMekanismPacket;
 import mekanism.common.tile.base.TileEntityMekanism;
 import mekanism.common.util.WorldUtils;
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -21,8 +20,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.function.IntFunction;
 
-//TODO 1.21.1対応
-
 public record PacketCompactPlusGuiInteract(CompactPlusGuiInteraction interaction, BlockPos tilePosition, double extra) implements IMekanismPacket {
 
     public static final CustomPacketPayload.Type<PacketCompactPlusGuiInteract> TYPE = new CustomPacketPayload.Type<>(CompactMekanismMachinesPlus.rl("gui_interact"));
@@ -32,27 +29,8 @@ public record PacketCompactPlusGuiInteract(CompactPlusGuiInteraction interaction
             ByteBufCodecs.DOUBLE, PacketCompactPlusGuiInteract::extra,
             PacketCompactPlusGuiInteract::new
     );
-
-    public PacketCompactPlusGuiInteract(CompactPlusGuiInteraction interaction, BlockEntity tile) {
-        this(interaction, tile.getBlockPos());
-    }
-
     public PacketCompactPlusGuiInteract(CompactPlusGuiInteraction interaction, BlockEntity tile, double extra) {
         this(interaction, tile.getBlockPos(), extra);
-    }
-
-    public PacketCompactPlusGuiInteract(CompactPlusGuiInteraction interaction, BlockPos tilePosition) {
-        this(interaction, tilePosition, 0);
-    }
-
-    public PacketCompactPlusGuiInteract(CompactPlusGuiInteraction interaction, BlockPos tilePosition, double extra) {
-        this.interaction = interaction;
-        this.tilePosition = tilePosition;
-        this.extra = extra;
-    }
-
-    public static PacketCompactPlusGuiInteract decode(FriendlyByteBuf buffer) {
-        return new PacketCompactPlusGuiInteract(buffer.readEnum(CompactPlusGuiInteraction.class), buffer.readBlockPos(), buffer.readDouble());
     }
 
     @Override
@@ -65,7 +43,7 @@ public record PacketCompactPlusGuiInteract(CompactPlusGuiInteraction interaction
     }
 
     @Override
-    public @NotNull Type<? extends CustomPacketPayload> type() {
+    public @NotNull Type<PacketCompactPlusGuiInteract> type() {
         return TYPE;
     }
 

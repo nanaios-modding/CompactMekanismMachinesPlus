@@ -32,9 +32,6 @@ public class CompactMekanismMachinesPlus implements IModModule {
     public  CompactMekanismMachinesPlus(IEventBus modEventBus, ModContainer modContainer) {
         instance = this;
 
-        //listenerを登録
-        modEventBus.addListener(this::commonSetup);
-
         //eventBusに登録
         CompactPlusBlocks.BLOCKS.register(modEventBus);
         CompactPlusCreativeTabs.CREATIVE_TABS.register(modEventBus);
@@ -43,11 +40,7 @@ public class CompactMekanismMachinesPlus implements IModModule {
 
         //情報をセット
         versionNumber = new Version(modContainer);
-        packetHandler = new CompactPlusPacketHandler();
-    }
-
-    private void commonSetup(IEventBus modEventBus) {
-        packetHandler.initialize();
+        packetHandler = new CompactPlusPacketHandler(modEventBus,versionNumber);
     }
 
     public static CompactPlusPacketHandler packetHandler() {

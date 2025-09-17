@@ -1,8 +1,8 @@
 package com.nanaios.CompactMekanismMachinesPlus.client.gui.element;
 
 import com.nanaios.CompactMekanismMachinesPlus.common.CompactMekanismMachinesPlus;
-import com.nanaios.CompactMekanismMachinesPlus.common.network.to_server.PacketCompactPlusGuiButtonPress;
-import com.nanaios.CompactMekanismMachinesPlus.common.network.to_server.PacketCompactPlusGuiButtonPress.ClickedCompactPlusTileButton;
+import com.nanaios.CompactMekanismMachinesPlus.common.network.to_server.PacketCompactPlusTileButtonPress;
+import com.nanaios.CompactMekanismMachinesPlus.common.network.to_server.PacketCompactPlusTileButtonPress.ClickedCompactPlusTileButton;
 import com.nanaios.CompactMekanismMachinesPlus.common.tile.TileEntityCompactThermoelectricBoiler;
 import com.nanaios.CompactMekanismMachinesPlus.client.gui.element.GuiBoilerTab.BoilerTab;
 import mekanism.api.text.ILangEntry;
@@ -49,7 +49,7 @@ public class GuiBoilerTab extends GuiTabElementType<TileEntityCompactThermoelect
 
         @Override
         public void onClick(TileEntityCompactThermoelectricBoiler tile) {
-            CompactMekanismMachinesPlus.packetHandler().sendToServer(new PacketCompactPlusGuiButtonPress(button, tile.getBlockPos()));
+            CompactMekanismMachinesPlus.packetHandler().sendToServer(new PacketCompactPlusTileButtonPress(button, tile.getBlockPos()));
         }
 
         @Override
