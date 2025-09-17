@@ -24,7 +24,7 @@ public class GuiBoilerTab extends GuiTabElementType<TileEntityCompactThermoelect
     }
 
     public enum BoilerTab implements TabType<TileEntityCompactThermoelectricBoiler> {
-        MAIN("gases.png", MekanismLang.MAIN_TAB, 6,ClickedCompactPlusTileButton.TAB_MAIN, SpecialColors.TAB_MULTIBLOCK_MAIN),
+        MAIN("chemicals.png", MekanismLang.MAIN_TAB, 6,ClickedCompactPlusTileButton.TAB_MAIN, SpecialColors.TAB_MULTIBLOCK_MAIN),
         STAT("stats.png", MekanismLang.BOILER_STATS, 34,ClickedCompactPlusTileButton.TAB_STATS, SpecialColors.TAB_CONFIGURATION),
         CONFIG("radial/wrench.png", MekanismLang.BUTTON_CONFIG,62, ClickedCompactPlusTileButton.TAB_CONFIG, SpecialColors.TAB_MULTIBLOCK_STATS);
 

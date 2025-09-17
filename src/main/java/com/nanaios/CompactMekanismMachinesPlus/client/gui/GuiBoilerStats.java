@@ -3,10 +3,8 @@ package com.nanaios.CompactMekanismMachinesPlus.client.gui;
 import java.util.Collections;
 
 import com.nanaios.CompactMekanismMachinesPlus.common.tile.TileEntityCompactThermoelectricBoiler;
-import com.nanaios.CompactMekanismMachinesPlus.client.gui.element.GuiBoilerTab;
 import com.nanaios.CompactMekanismMachinesPlus.client.gui.element.GuiBoilerTab.BoilerTab;
 import mekanism.api.math.MathUtils;
-import mekanism.client.gui.GuiMekanismTile;
 import mekanism.client.gui.element.graph.GuiLongGraph;
 import mekanism.client.gui.element.tab.GuiHeatTab;
 import mekanism.common.MekanismLang;
@@ -33,8 +31,7 @@ public class GuiBoilerStats extends GuiBoilerInfo{
     @Override
     protected void addGuiElements() {
         super.addGuiElements();
-        addRenderableWidget(new GuiBoilerTab(this, tile, BoilerTab.MAIN));
-        addRenderableWidget(new GuiBoilerTab(this, tile, BoilerTab.CONFIG));
+        showTabs(BoilerTab.STAT);
         addRenderableWidget(new GuiHeatTab(this, () -> {
             Component environment = MekanismUtils.getTemperatureDisplay(tile.lastEnvironmentLoss, TemperatureUnit.KELVIN, false);
             return Collections.singletonList(MekanismLang.DISSIPATED_RATE.translate(environment));

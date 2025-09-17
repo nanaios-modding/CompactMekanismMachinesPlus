@@ -1,11 +1,9 @@
 package com.nanaios.CompactMekanismMachinesPlus.client.gui;
 
 import com.nanaios.CompactMekanismMachinesPlus.client.gui.element.GuiBoilerTab;
-import com.nanaios.CompactMekanismMachinesPlus.common.CompactMekanismMachinesPlus;
 import com.nanaios.CompactMekanismMachinesPlus.common.CompactPlusLang;
 import com.nanaios.CompactMekanismMachinesPlus.common.network.to_server.PacketCompactPlusGuiInteract;
 import com.nanaios.CompactMekanismMachinesPlus.common.tile.TileEntityCompactThermoelectricBoiler;
-import mekanism.client.gui.GuiMekanismTile;
 import mekanism.client.gui.element.tab.GuiHeatTab;
 import mekanism.client.gui.element.text.GuiTextField;
 import mekanism.common.MekanismLang;
@@ -14,7 +12,6 @@ import mekanism.common.network.PacketUtils;
 import mekanism.common.util.MekanismUtils;
 import mekanism.common.util.UnitDisplayUtils;
 import mekanism.common.util.text.InputValidator;
-import mekanism.generators.common.GeneratorsLang;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
@@ -33,8 +30,7 @@ public class GuiBoilerConfig extends GuiBoilerInfo{
     @Override
     protected void addGuiElements() {
         super.addGuiElements();
-        addRenderableWidget(new GuiBoilerTab(this, tile, GuiBoilerTab.BoilerTab.MAIN));
-        addRenderableWidget(new GuiBoilerTab(this, tile, GuiBoilerTab.BoilerTab.STAT));
+        showTabs(GuiBoilerTab.BoilerTab.CONFIG);
         addRenderableWidget(new GuiHeatTab(this, () -> {
             Component environment = MekanismUtils.getTemperatureDisplay(tile.lastEnvironmentLoss, UnitDisplayUtils.TemperatureUnit.KELVIN, false);
             return Collections.singletonList(MekanismLang.DISSIPATED_RATE.translate(environment));
@@ -59,8 +55,8 @@ public class GuiBoilerConfig extends GuiBoilerInfo{
         drawString(guiGraphics ,Component.literal("1 <"),8,43,titleTextColor());
         drawString(guiGraphics ,Component.literal("< " + TileEntityCompactThermoelectricBoiler.BOILER_HEIGHT),58,43,titleTextColor());
         drawString(guiGraphics, MekanismLang.BOILER_HEATERS.translate(tile.getSuperHeatingElements()), 8,76,titleTextColor());
-        drawString(guiGraphics ,Component.literal("0 ≦"),8,93,titleTextColor());
-        drawString(guiGraphics ,Component.literal("≦ " + tile.maxSuperHeatingElements),78,93,titleTextColor());
+        drawString(guiGraphics ,Component.literal("-1 <"),8,93,titleTextColor());
+        drawString(guiGraphics ,Component.literal("< " + (tile.maxSuperHeatingElements + 1)),78,93,titleTextColor());
 
         super.drawForegroundText(guiGraphics, mouseX, mouseY);
     }
