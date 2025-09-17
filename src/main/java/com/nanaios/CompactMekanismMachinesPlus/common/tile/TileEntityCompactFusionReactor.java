@@ -192,7 +192,7 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
         ejectorComponent.setCanEject(type -> canFunction());
     }
 
-    //update系統
+    //update系統.
 
     @Override
     public boolean onUpdateServer() {
@@ -239,12 +239,12 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
         this.addTemperatureFromEnergyInput(energy);
     }
 
-    //以下レーザメソッド系統
+    //以下レーザメソッド系統.
     @Override
     public boolean canLasersDig() {
         return false;
     }
-    //以下融合炉メソッド
+    //以下融合炉メソッド.
 
     public void addTemperatureFromEnergyInput(long energyAdded) {
         if (isBurning()) {
@@ -450,7 +450,7 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
         markForSave();
     }
 
-    //以下初期化系メソッド
+    //以下初期化系メソッド.
 
 
     @Override
@@ -544,7 +544,7 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
     }
 
 
-    //その他
+    //その他.
 
     @Override
     public void addContainerTrackers(MekanismContainer container) {

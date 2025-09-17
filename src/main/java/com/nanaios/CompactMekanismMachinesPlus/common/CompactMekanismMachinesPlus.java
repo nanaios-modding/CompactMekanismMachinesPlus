@@ -14,7 +14,7 @@ import org.apache.logging.log4j.LogManager;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.Logger;
 
-//TODO 1.21.1対応
+//TODO 1.21.1対応.
 
 @Mod(CompactMekanismMachinesPlus.MODID)
 public class CompactMekanismMachinesPlus implements IModModule {
@@ -32,13 +32,13 @@ public class CompactMekanismMachinesPlus implements IModModule {
     public  CompactMekanismMachinesPlus(IEventBus modEventBus, ModContainer modContainer) {
         instance = this;
 
-        //eventBusに登録
+        //eventBusに登録.
         CompactPlusBlocks.BLOCKS.register(modEventBus);
         CompactPlusCreativeTabs.CREATIVE_TABS.register(modEventBus);
         CompactPlusContainerTypes.CONTAINER_TYPES.register(modEventBus);
         CompactPlusTileEntityTypes.TILE_ENTITY_TYPES.register(modEventBus);
 
-        //情報をセット
+        //情報をセット.
         versionNumber = new Version(modContainer);
         packetHandler = new CompactPlusPacketHandler(modEventBus,versionNumber);
     }

@@ -178,7 +178,7 @@ public class TileEntityCompactSPS extends TileEntityConfigurableMachine {
         nbtTags.putDouble(SerializationConstants.LAST_PROCESSED, lastProcessed);
     }
 
-    //以下初期化
+    //以下初期化.
     @NotNull
     @Override
     protected IEnergyContainerHolder getInitialEnergyContainers(IContentsListener listener) {
