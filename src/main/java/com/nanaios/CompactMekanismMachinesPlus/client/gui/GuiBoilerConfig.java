@@ -41,7 +41,7 @@ public class GuiBoilerConfig extends GuiBoilerInfo{
                 .setEnterHandler(this::setDispersersY)
                 .setMaxLength(2);
 
-        superHeatingElementsField = addRenderableWidget(new GuiTextField(this, 28, 91, 46, 11));
+        superHeatingElementsField = addRenderableWidget(new GuiTextField(this, 33, 91, 46, 11));
         superHeatingElementsField.setInputValidator(InputValidator.DIGIT)
                 .setEnterHandler(this::setSuperHeatingElements)
                 .setMaxLength(4);
@@ -56,7 +56,7 @@ public class GuiBoilerConfig extends GuiBoilerInfo{
         drawString(guiGraphics ,Component.literal("< " + TileEntityCompactThermoelectricBoiler.BOILER_HEIGHT),58,43,titleTextColor());
         drawString(guiGraphics, MekanismLang.BOILER_HEATERS.translate(tile.getSuperHeatingElements()), 8,76,titleTextColor());
         drawString(guiGraphics ,Component.literal("-1 <"),8,93,titleTextColor());
-        drawString(guiGraphics ,Component.literal("< " + (tile.maxSuperHeatingElements + 1)),78,93,titleTextColor());
+        drawString(guiGraphics ,Component.literal("< " + (tile.maxSuperHeatingElements + 1)),88,93,titleTextColor());
 
         super.drawForegroundText(guiGraphics, mouseX, mouseY);
     }

@@ -116,6 +116,7 @@ public class TileEntityCompactThermoelectricBoiler extends TileEntityConfigurabl
             gasConfig.setDataType(DataType.OUTPUT_1, RelativeSide.BOTTOM);
             gasConfig.setDataType(DataType.OUTPUT_2, RelativeSide.RIGHT);
 
+            gasConfig.setCanEject(true);
             gasConfig.setEjecting(true);
         }
 
@@ -127,6 +128,7 @@ public class TileEntityCompactThermoelectricBoiler extends TileEntityConfigurabl
             }
 
             fluidConfig.setCanEject(false);
+            fluidConfig.setEjecting(false);
         }
 
         ConfigInfo heatConfig = configComponent.getConfig(TransmissionType.HEAT);
@@ -137,6 +139,7 @@ public class TileEntityCompactThermoelectricBoiler extends TileEntityConfigurabl
             }
 
             heatConfig.setCanEject(false);
+            heatConfig.setEjecting(false);
         }
 
         ejectorComponent = new TileComponentEjector(this,() -> Long.MAX_VALUE,() -> Integer.MAX_VALUE, () ->Long.MAX_VALUE);

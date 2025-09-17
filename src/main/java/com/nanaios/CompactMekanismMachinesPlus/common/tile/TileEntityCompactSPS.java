@@ -69,6 +69,7 @@ public class TileEntityCompactSPS extends TileEntityConfigurableMachine {
             gasConfig.setDataType(DataType.INPUT, RelativeSide.LEFT);
             gasConfig.setDataType(DataType.OUTPUT, RelativeSide.RIGHT);
 
+            gasConfig.setCanEject(true);
             gasConfig.setEjecting(true);
         }
 
@@ -79,9 +80,9 @@ public class TileEntityCompactSPS extends TileEntityConfigurableMachine {
             for (RelativeSide side: RelativeSide.values()) {
                 energyConfig.setDataType(DataType.INPUT,side);
             }
-        }
 
-        configComponent.setupInputConfig(TransmissionType.CHEMICAL,inputTank);
+            energyConfig.setCanEject(false);
+        }
 
         ejectorComponent = new TileComponentEjector(this, ()->Long.MAX_VALUE,()->Integer.MAX_VALUE,() -> Long.MAX_VALUE);
         ejectorComponent.setOutputData(configComponent,TransmissionType.CHEMICAL);

@@ -150,6 +150,8 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
             gasConfig.setDataType(DataType.INPUT_1, RelativeSide.LEFT);
             gasConfig.setDataType(DataType.INPUT_2, RelativeSide.RIGHT);
             gasConfig.setDataType(DataType.OUTPUT, RelativeSide.BOTTOM);
+
+            gasConfig.setCanEject(true);
             gasConfig.setEjecting(true);
         }
 
@@ -160,6 +162,7 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
                 energyConfig.setDataType(DataType.OUTPUT,side);
             }
 
+            energyConfig.setCanEject(true);
             energyConfig.setEjecting(true);
         }
 
@@ -171,6 +174,7 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
             }
 
             fluidConfig.setCanEject(false);
+            fluidConfig.setEjecting(false);
         }
 
         ConfigInfo itemConfig = configComponent.getConfig(TransmissionType.ITEM);
@@ -182,6 +186,7 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
 
 
             itemConfig.setCanEject(false);
+            itemConfig.setEjecting(false);
         }
 
         ejectorComponent = new TileComponentEjector(this, ()->Long.MAX_VALUE,()->Integer.MAX_VALUE,()-> Long.MAX_VALUE);
