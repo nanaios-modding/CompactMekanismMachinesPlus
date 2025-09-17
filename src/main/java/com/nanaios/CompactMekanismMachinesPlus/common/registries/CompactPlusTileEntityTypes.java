@@ -23,6 +23,7 @@ public class CompactPlusTileEntityTypes {
                 .serverTicker(TileEntityMekanism::tickServer)
                 .withSimple(Capabilities.CONFIG_CARD)
                 .withSimple(Capabilities.EVAPORATION_SOLAR)
+                .withSimple(Capabilities.LASER_RECEPTOR)
                 .build();
         COMPACT_SPS = TILE_ENTITY_TYPES.mekBuilder(CompactPlusBlocks.COMPACT_SPS,TileEntityCompactSPS::new)
                 .clientTicker(TileEntityMekanism::tickClient)

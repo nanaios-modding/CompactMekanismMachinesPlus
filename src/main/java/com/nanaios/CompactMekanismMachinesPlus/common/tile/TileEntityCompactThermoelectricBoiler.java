@@ -76,12 +76,17 @@ public class TileEntityCompactThermoelectricBoiler extends TileEntityConfigurabl
     public VariableHeatCapacitor heatCapacitor;
 
     private final double biomeAmbientTemp;
+
+    @ContainerSync
     public double lastEnvironmentLoss;
 
+    @ContainerSync
     public int lastBoilRate, lastMaxBoil;
 
+    @ContainerSync
     public int superHeatingElements,dispersersY,maxSuperHeatingElements;
 
+    @ContainerSync
     private int waterVolume, steamVolume;
 
     private int waterTankCapacity;
@@ -181,6 +186,7 @@ public class TileEntityCompactThermoelectricBoiler extends TileEntityConfigurabl
         }
         // handle water heat transfer
         if (getTotalTemperature() >= HeatUtils.BASE_BOIL_TEMP && !waterTank.isEmpty()) {
+            setActive(true);
             double heatAvailable = getHeatAvailable();
             lastMaxBoil = Mth.floor(HeatUtils.getSteamEnergyEfficiency() * heatAvailable / HeatUtils.getWaterThermalEnthalpy());
 
@@ -198,6 +204,7 @@ public class TileEntityCompactThermoelectricBoiler extends TileEntityConfigurabl
             heatCapacitor.handleHeat(-amountToBoil * HeatUtils.getWaterThermalEnthalpy() / HeatUtils.getSteamEnergyEfficiency());
             lastBoilRate = amountToBoil;
         } else {
+            setActive(false);
             lastBoilRate = 0;
             lastMaxBoil = 0;
         }

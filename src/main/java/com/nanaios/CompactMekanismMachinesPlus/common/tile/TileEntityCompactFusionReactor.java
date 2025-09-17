@@ -11,7 +11,6 @@ import mekanism.api.fluid.IExtendedFluidTank;
 import mekanism.api.heat.HeatAPI;
 import mekanism.api.heat.IHeatCapacitor;
 import mekanism.api.math.MathUtils;
-import mekanism.common.attachments.containers.chemical.ChemicalTanksBuilder;
 import mekanism.common.capabilities.Capabilities;
 import mekanism.common.capabilities.chemical.VariableCapacityChemicalTank;
 import mekanism.common.capabilities.energy.MachineEnergyContainer;
@@ -35,7 +34,6 @@ import mekanism.common.inventory.container.sync.dynamic.SyncMapper;
 import mekanism.common.inventory.slot.InputInventorySlot;
 import mekanism.common.lib.transmitter.TransmissionType;
 import mekanism.common.registries.MekanismChemicals;
-import mekanism.common.tags.MekanismTags;
 import mekanism.common.tile.component.TileComponentEjector;
 import mekanism.common.tile.component.config.ConfigInfo;
 import mekanism.common.tile.component.config.DataType;
@@ -211,9 +209,15 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
                 fuelBurned = burnFuel();
                 if (fuelBurned == 0) {
                     setBurning(false);
+                    setActive(false);
+                } else {
+                    setActive(true);
                 }
+            } else {
+                setActive(false);
             }
         } else {
+            setActive(false);
             setBurning(false);
         }
 
