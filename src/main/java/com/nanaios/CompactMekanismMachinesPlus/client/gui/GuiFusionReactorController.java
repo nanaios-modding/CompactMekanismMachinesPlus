@@ -49,6 +49,7 @@ public class GuiFusionReactorController extends GuiConfigurableTile<TileEntityCo
         addRenderableWidget(new GuiFusionReactorTab(this, tile, FusionReactorTab.FUEL));
         addRenderableWidget(new GuiFusionReactorTab(this, tile, FusionReactorTab.STAT));
 
+        //configとtransporterのタブを左に動かす
         renderables.forEach(element -> {
             if(element instanceof GuiSideConfigurationTab<?> tab) {
                 tab.move(-26,0);
