@@ -26,7 +26,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 
-//TODO 1.21.1対応.
 
 public record PacketCompactPlusTileButtonPress(ClickedCompactPlusTileButton buttonClicked, BlockPos pos) implements IMekanismPacket {
 

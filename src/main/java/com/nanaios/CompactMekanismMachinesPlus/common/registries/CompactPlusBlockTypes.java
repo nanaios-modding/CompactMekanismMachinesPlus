@@ -5,6 +5,7 @@ import com.nanaios.CompactMekanismMachinesPlus.common.tile.TileEntityCompactSPS;
 import com.nanaios.CompactMekanismMachinesPlus.common.tile.TileEntityCompactThermoelectricBoiler;
 import mekanism.api.Upgrade;
 import mekanism.common.MekanismLang;
+import mekanism.common.block.attribute.Attributes;
 import mekanism.common.config.MekanismConfig;
 import mekanism.common.content.blocktype.Machine;
 import mekanism.common.lib.transmitter.TransmissionType;
@@ -32,6 +33,7 @@ public class CompactPlusBlockTypes {
         COMPACT_SPS = Machine.MachineBuilder.createMachine(() -> CompactPlusTileEntityTypes.COMPACT_SPS, MekanismLang.DESCRIPTION_SPS_CASING)
                 .withGui(() -> CompactPlusContainerTypes.COMPACT_SPS,MekanismLang.SPS)
                 .withSound(MekanismSounds.SPS)
+                .with(Attributes.ACTIVE, Attributes.COMPARATOR)
                 .withEnergyConfig(MekanismConfig.storage.spsPort)
                 .withSideConfig(TransmissionType.CHEMICAL,TransmissionType.ENERGY)
                 .withSupportedUpgrades(Upgrade.MUFFLING)

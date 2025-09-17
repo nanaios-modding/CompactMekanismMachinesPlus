@@ -211,7 +211,7 @@ public class TileEntityCompactSPS extends TileEntityConfigurableMachine {
         return builder.build();
     }
 
-    /* public IEnergyContainer getEnergyContainer() {
+    public IEnergyContainer getEnergyContainer() {
         return energyContainer;
-    } */
+    }
 }
