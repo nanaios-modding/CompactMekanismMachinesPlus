@@ -53,7 +53,7 @@ import mekanism.common.content.boiler.BoilerMultiblockData;
 
 import java.util.List;
 
-public class TileEntityCompactThermoelectricBoiler extends TileEntityConfigurableMachine {
+public class TileEntityCompactThermoelectricBoiler extends TileEntityCompactPlusBase {
     //public static final Object2BooleanMap<UUID> hotMap = new Object2BooleanOpenHashMap<>();
 
     public static final double CASING_HEAT_CAPACITY = 50;

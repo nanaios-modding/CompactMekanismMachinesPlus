@@ -3,16 +3,11 @@ package com.nanaios.CompactMekanismMachinesPlus.common;
 import com.nanaios.CompactMekanismMachinesPlus.common.network.CompactPlusPacketHandler;
 import com.nanaios.CompactMekanismMachinesPlus.common.registries.CompactPlusBlocks;
 import com.nanaios.CompactMekanismMachinesPlus.common.registries.CompactPlusContainerTypes;
-import com.nanaios.CompactMekanismMachinesPlus.common.registries.CompactPlusCreativeTabs;
 import com.nanaios.CompactMekanismMachinesPlus.common.registries.CompactPlusTileEntityTypes;
 import mekanism.common.base.IModModule;
 import mekanism.common.lib.Version;
-import mekanism.generators.common.network.GeneratorsPacketHandler;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.crafting.RecipeManager;
-import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.fml.ModLoader;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
@@ -44,7 +39,6 @@ public class CompactMekanismMachinesPlus implements IModModule {
 
         //eventBusに登録
         CompactPlusBlocks.BLOCKS.register(modEventBus);
-        CompactPlusCreativeTabs.CREATIVE_TABS.register(modEventBus);
         CompactPlusContainerTypes.CONTAINER_TYPES.register(modEventBus);
         CompactPlusTileEntityTypes.TILE_ENTITY_TYPES.register(modEventBus);
 

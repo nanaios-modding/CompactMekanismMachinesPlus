@@ -9,9 +9,7 @@ import mekanism.common.content.blocktype.Machine;
 import mekanism.common.item.block.machine.ItemBlockMachine;
 import mekanism.common.registration.impl.BlockDeferredRegister;
 import mekanism.common.registration.impl.BlockRegistryObject;
-import mekanism.common.resource.BlockResourceInfo;
 import mekanism.generators.common.content.blocktype.Generator;
-import net.minecraft.world.level.material.MapColor;
 
 public class CompactPlusBlocks {
     private CompactPlusBlocks() {}
@@ -22,8 +20,8 @@ public class CompactPlusBlocks {
     public static final BlockRegistryObject<BlockTile.BlockTileModel<TileEntityCompactThermoelectricBoiler, Machine<TileEntityCompactThermoelectricBoiler>>, ItemBlockMachine> COMPACT_THERMOELECTRIC_BOILER;
 
     static {
-        COMPACT_FUSION_REACTOR = BLOCKS.register("compact_fusion_reactor", () -> new BlockTile.BlockTileModel<>(CompactPlusBlockTypes.COMPACT_FUSION_REACTOR, properties -> properties.mapColor(MapColor.TERRACOTTA_BROWN)), ItemBlockMachine::new);
-        COMPACT_SPS = BLOCKS.register("compact_sps", () -> new BlockTile.BlockTileModel<>(CompactPlusBlockTypes.COMPACT_SPS, properties -> properties.mapColor(MapColor.COLOR_LIGHT_GRAY)), ItemBlockMachine::new);
-        COMPACT_THERMOELECTRIC_BOILER = BLOCKS.register("compact_thermoelectric_boiler", () -> new BlockTile.BlockTileModel<>(CompactPlusBlockTypes.COMPACT_THERMOELECTRIC_BOILER, properties -> properties.mapColor(BlockResourceInfo.STEEL.getMapColor())), ItemBlockMachine::new);
+        COMPACT_FUSION_REACTOR = BLOCKS.register("compact_fusion_reactor", () -> new BlockTile.BlockTileModel<>(CompactPlusBlockTypes.COMPACT_FUSION_REACTOR), ItemBlockMachine::new);
+        COMPACT_SPS = BLOCKS.register("compact_sps", () -> new BlockTile.BlockTileModel<>(CompactPlusBlockTypes.COMPACT_SPS), ItemBlockMachine::new);
+        COMPACT_THERMOELECTRIC_BOILER = BLOCKS.register("compact_thermoelectric_boiler", () -> new BlockTile.BlockTileModel<>(CompactPlusBlockTypes.COMPACT_THERMOELECTRIC_BOILER), ItemBlockMachine::new);
     }
 }

@@ -34,7 +34,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
 
-public class TileEntityCompactSPS extends TileEntityConfigurableMachine {
+public class TileEntityCompactSPS extends TileEntityCompactPlusBase {
 
     @ContainerSync
     public IGasTank inputTank;
