@@ -149,6 +149,8 @@ dependencies {
 
     //compileOnly "mekanism:Mekanism:${mekanism_version}:api"
 
+    runtimeOnly fg.deobf("mezz.jei:jei-${minecraft_version}-forge:${jei_version}")
+
     // If you want to test/use Mekanism & its modules during `runClient` invocation, use the following
     implementation fg.deobf("mekanism:Mekanism:${mekanism_version}")// core
     runtimeOnly fg.deobf("mekanism:Mekanism:${mekanism_version}:additions")// Mekanism: Additions
