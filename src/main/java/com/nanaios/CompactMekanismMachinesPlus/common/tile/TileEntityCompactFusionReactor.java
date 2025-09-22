@@ -68,8 +68,8 @@ import java.util.Optional;
 
 public class TileEntityCompactFusionReactor extends TileEntityCompactPlusBase implements ILaserReceptor {
 
-    public static final String HEAT_TAB = FusionReactorMultiblockData.HEAT_TAB;
-    public static final String FUEL_TAB =  FusionReactorMultiblockData.FUEL_TAB;
+    public static final String HEAT_TAB = "heat";
+    public static final String FUEL_TAB = "fuel";
     public static final String STATS_TAB = FusionReactorMultiblockData.STATS_TAB;
 
     public static final int MAX_INJECTION = 98;//this is the effective cap in the GUI, as text field is limited to 2 chars
