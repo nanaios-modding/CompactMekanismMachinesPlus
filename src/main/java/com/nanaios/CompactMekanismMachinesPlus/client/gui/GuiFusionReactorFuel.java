@@ -1,5 +1,6 @@
 package com.nanaios.CompactMekanismMachinesPlus.client.gui;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.nanaios.CompactMekanismMachinesPlus.client.gui.element.GuiFusionReactorTab;
 import com.nanaios.CompactMekanismMachinesPlus.client.gui.element.GuiFusionReactorTab.FusionReactorTab;
 import com.nanaios.CompactMekanismMachinesPlus.common.network.to_server.PacketCompactPlusGuiInteract.CompactPlusGuiInteraction;
@@ -14,7 +15,6 @@ import mekanism.client.gui.element.text.GuiTextField;
 import mekanism.common.inventory.container.tile.EmptyTileContainer;
 import mekanism.common.util.text.InputValidator;
 import mekanism.generators.common.GeneratorsLang;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import org.jetbrains.annotations.NotNull;
@@ -38,18 +38,18 @@ public class GuiFusionReactorFuel extends GuiFusionReactorInfo {
         addRenderableWidget(new GuiFusionReactorTab(this, tile, FusionReactorTab.HEAT));
         addRenderableWidget(new GuiFusionReactorTab(this, tile, FusionReactorTab.STAT));
         injectionRateField = addRenderableWidget(new GuiTextField(this, 98, 115, 26, 11));
-        injectionRateField.setFocused(true);
+        injectionRateField.changeFocus(true);
         injectionRateField.setInputValidator(InputValidator.DIGIT)
               .setEnterHandler(this::setInjection)
               .setMaxLength(2);
     }
 
     @Override
-    protected void drawForegroundText(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY) {
-        renderTitleText(guiGraphics);
-        drawCenteredText(guiGraphics, GeneratorsLang.REACTOR_INJECTION_RATE.translate(tile.getInjectionRate()), 0, imageWidth, 35, titleTextColor());
-        drawString(guiGraphics, GeneratorsLang.REACTOR_EDIT_RATE.translate(), 50, 117, titleTextColor());
-        super.drawForegroundText(guiGraphics, mouseX, mouseY);
+    protected void drawForegroundText(@NotNull PoseStack poseStack, int mouseX, int mouseY) {
+        renderTitleText(poseStack);
+        drawCenteredText(poseStack, GeneratorsLang.REACTOR_INJECTION_RATE.translate(tile.getInjectionRate()), 0, imageWidth, 35, titleTextColor());
+        drawString(poseStack, GeneratorsLang.REACTOR_EDIT_RATE.translate(), 50, 117, titleTextColor());
+        super.drawForegroundText(poseStack, mouseX, mouseY);
     }
 
     private void setInjection() {

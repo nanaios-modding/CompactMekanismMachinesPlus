@@ -16,10 +16,12 @@ import mekanism.generators.client.GeneratorsSpecialColors;
 import com.nanaios.CompactMekanismMachinesPlus.client.gui.element.GuiFusionReactorTab.FusionReactorTab;
 import mekanism.generators.common.GeneratorsLang;
 import mekanism.generators.common.MekanismGenerators;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import org.jetbrains.annotations.NotNull;
 
-public class GuiFusionReactorTab extends GuiTabElementType<TileEntityCompactFusionReactor,FusionReactorTab> {
+public class GuiFusionReactorTab extends GuiCompactTabElementTypeBase<TileEntityCompactFusionReactor,FusionReactorTab> {
 
     public GuiFusionReactorTab(IGuiWrapper gui, TileEntityCompactFusionReactor tile, FusionReactorTab type) {
         super(gui, tile, type);

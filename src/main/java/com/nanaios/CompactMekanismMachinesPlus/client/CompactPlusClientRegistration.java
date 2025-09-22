@@ -4,7 +4,7 @@ import com.nanaios.CompactMekanismMachinesPlus.client.gui.*;
 import com.nanaios.CompactMekanismMachinesPlus.common.CompactMekanismMachinesPlus;
 import com.nanaios.CompactMekanismMachinesPlus.common.registries.CompactPlusContainerTypes;
 import mekanism.client.ClientRegistrationUtil;
-import net.minecraft.core.registries.Registries;
+import net.minecraft.core.Registry;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -17,7 +17,7 @@ public class CompactPlusClientRegistration {
 
     @SubscribeEvent(priority = EventPriority.LOW)
     public static void registerContainers(RegisterEvent event) {
-        event.register(Registries.MENU, helper -> {
+        event.register(Registry.MENU_REGISTRY, helper -> {
             ClientRegistrationUtil.registerScreen(CompactPlusContainerTypes.COMPACT_FUSION_REACTOR, GuiFusionReactorController::new);
             ClientRegistrationUtil.registerScreen(CompactPlusContainerTypes.COMPACT_FUSION_REACTOR_FUEL, GuiFusionReactorFuel::new);
             ClientRegistrationUtil.registerScreen(CompactPlusContainerTypes.COMPACT_FUSION_REACTOR_HEAT, GuiFusionReactorHeat::new);

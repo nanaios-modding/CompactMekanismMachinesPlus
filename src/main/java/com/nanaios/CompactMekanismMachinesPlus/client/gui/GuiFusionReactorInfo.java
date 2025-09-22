@@ -2,6 +2,7 @@ package com.nanaios.CompactMekanismMachinesPlus.client.gui;
 
 import java.util.List;
 
+import com.nanaios.CompactMekanismMachinesPlus.client.gui.element.GuiCompactBase;
 import com.nanaios.CompactMekanismMachinesPlus.common.tile.TileEntityCompactFusionReactor;
 import mekanism.client.gui.GuiMekanismTile;
 import mekanism.client.gui.element.button.MekanismImageButton;
@@ -19,7 +20,7 @@ import mekanism.generators.common.GeneratorsLang;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 
-public abstract class GuiFusionReactorInfo extends GuiMekanismTile<TileEntityCompactFusionReactor, EmptyTileContainer<TileEntityCompactFusionReactor>> {
+public abstract class GuiFusionReactorInfo extends GuiCompactBase<TileEntityCompactFusionReactor, EmptyTileContainer<TileEntityCompactFusionReactor>> {
 
     protected GuiFusionReactorInfo(EmptyTileContainer<TileEntityCompactFusionReactor> container, Inventory inv, Component title) {
         super(container, inv, title);

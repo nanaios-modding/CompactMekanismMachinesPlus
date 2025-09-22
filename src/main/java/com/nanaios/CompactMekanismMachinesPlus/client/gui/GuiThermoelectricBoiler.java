@@ -3,11 +3,12 @@ package com.nanaios.CompactMekanismMachinesPlus.client.gui;
 import java.util.Collections;
 import java.util.List;
 
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.nanaios.CompactMekanismMachinesPlus.client.gui.element.GuiCompactConfigurableBase;
 import com.nanaios.CompactMekanismMachinesPlus.common.tile.TileEntityCompactThermoelectricBoiler;
 import com.nanaios.CompactMekanismMachinesPlus.client.gui.element.GuiBoilerTab;
 import com.nanaios.CompactMekanismMachinesPlus.client.gui.element.GuiBoilerTab.BoilerTab;
 import mekanism.api.text.EnumColor;
-import mekanism.client.gui.GuiConfigurableTile;
 import mekanism.client.gui.element.GuiInnerScreen;
 import mekanism.client.gui.element.bar.GuiBar.IBarInfoHandler;
 import mekanism.client.gui.element.bar.GuiVerticalRateBar;
@@ -16,7 +17,6 @@ import mekanism.client.gui.element.gauge.GuiFluidGauge;
 import mekanism.client.gui.element.gauge.GuiGasGauge;
 import mekanism.client.gui.element.tab.GuiHeatTab;
 import mekanism.client.gui.element.tab.window.GuiSideConfigurationTab;
-import mekanism.client.gui.element.tab.window.GuiTransporterConfigTab;
 import mekanism.client.jei.MekanismJEIRecipeType;
 import mekanism.common.MekanismLang;
 import mekanism.common.config.MekanismConfig;
@@ -25,12 +25,11 @@ import mekanism.common.util.HeatUtils;
 import mekanism.common.util.MekanismUtils;
 import mekanism.common.util.UnitDisplayUtils.TemperatureUnit;
 import mekanism.common.util.text.TextUtils;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import org.jetbrains.annotations.NotNull;
 
-public class GuiThermoelectricBoiler extends GuiConfigurableTile<TileEntityCompactThermoelectricBoiler, MekanismTileContainer<TileEntityCompactThermoelectricBoiler>> {
+public class GuiThermoelectricBoiler extends GuiCompactConfigurableBase<TileEntityCompactThermoelectricBoiler, MekanismTileContainer<TileEntityCompactThermoelectricBoiler>> {
 
     public GuiThermoelectricBoiler(MekanismTileContainer<TileEntityCompactThermoelectricBoiler> container, Inventory inv, Component title) {
         super(container, inv, title);
@@ -93,7 +92,7 @@ public class GuiThermoelectricBoiler extends GuiConfigurableTile<TileEntityCompa
     }
 
     @Override
-    protected void drawForegroundText(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY) {
+    protected void drawForegroundText(@NotNull PoseStack guiGraphics, int mouseX, int mouseY) {
         renderTitleText(guiGraphics);
         drawString(guiGraphics, playerInventoryTitle, inventoryLabelX, inventoryLabelY, titleTextColor());
         super.drawForegroundText(guiGraphics, mouseX, mouseY);

@@ -17,7 +17,7 @@ import mekanism.common.util.MekanismUtils.ResourceType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
-public class GuiBoilerTab extends GuiTabElementType<TileEntityCompactThermoelectricBoiler, BoilerTab> {
+public class GuiBoilerTab extends GuiCompactTabElementTypeBase<TileEntityCompactThermoelectricBoiler, BoilerTab> {
 
     public GuiBoilerTab(IGuiWrapper gui, TileEntityCompactThermoelectricBoiler tile, BoilerTab type) {
         super(gui, tile, type);
