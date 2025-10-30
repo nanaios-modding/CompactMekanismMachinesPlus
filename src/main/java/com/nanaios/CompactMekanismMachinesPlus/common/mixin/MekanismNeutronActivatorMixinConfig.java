@@ -1,6 +1,5 @@
 package com.nanaios.CompactMekanismMachinesPlus.common.mixin;
 
-import net.minecraftforge.fml.loading.LoadingModList;
 import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
@@ -22,11 +21,7 @@ public class MekanismNeutronActivatorMixinConfig implements IMixinConfigPlugin {
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
-        if(LoadingModList.get().getModFileById("mekanismneutronactivator") == null) {
-            return false;
-        } else {
-            return  true;
-        }
+        return MixinMekanismNeutronActivator.isLoaded();
     }
 
     @Override

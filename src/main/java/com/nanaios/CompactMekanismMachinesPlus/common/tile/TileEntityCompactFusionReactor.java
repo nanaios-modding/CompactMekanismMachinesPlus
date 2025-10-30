@@ -1,6 +1,6 @@
 package com.nanaios.CompactMekanismMachinesPlus.common.tile;
 
-import com.nanaios.CompactMekanismMachinesPlus.common.CompactMekanismMachinesPlus;
+import com.nanaios.CompactMekanismMachinesPlus.common.mixin.MixinMekanismNeutronActivator;
 import com.nanaios.CompactMekanismMachinesPlus.common.registries.CompactPlusContainerTypes;
 import mekanism.api.*;
 import mekanism.api.lasers.ILaserReceptor;
@@ -54,9 +54,7 @@ import mekanism.common.util.MekanismUtils;
 import mekanism.common.util.WorldUtils;
 import mekanism.generators.common.config.MekanismGeneratorsConfig;
 import mekanism.generators.common.item.ItemHohlraum;
-import mekanism.generators.common.registries.GeneratorsFluids;
 import mekanism.generators.common.registries.GeneratorsGases;
-import net.michanide.mekanismneutronactivator.common.tile.machine.TileEntityFusionNeutronActivator;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.Mth;
@@ -330,8 +328,8 @@ public class TileEntityCompactFusionReactor extends TileEntityConfigurableMachin
         if(world !=null && MekanismUtils.canFunction(this)) {
             BlockPos pos = this.getBlockPos().below(2);
             BlockEntity entity = WorldUtils.getTileEntity(world, pos);
-            if(entity instanceof TileEntityFusionNeutronActivator tile) {
-                tile.setFuelBurned(fuelBurned);
+            if(MixinMekanismNeutronActivator.isLoaded()) {
+                MixinMekanismNeutronActivator.setFuelBurned(entity, fuelBurned);
             }
         }
 
